@@ -32,12 +32,12 @@ public final class ResultHandlerFactory {
 
   public static ResultHandler makeResultHandler(CaptureActivity activity, Result rawResult) {
     ParsedResult result = parseResult(rawResult);
-    switch (result.getType()) {
-      case PRODUCT:
-        return new ProductResultHandler(activity, result, rawResult);
-      default:
+//    switch (result.getType()) {
+      //case PRODUCT:
+//        return new ProductResultHandler(activity, result, rawResult);
+      //default:
         return new TextResultHandler(activity, result, rawResult);
-    }
+    //}
   }
 
   private static ParsedResult parseResult(Result rawResult) {

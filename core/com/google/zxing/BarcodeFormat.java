@@ -23,9 +23,6 @@ package com.google.zxing;
  */
 public enum BarcodeFormat {
 
-  /** Aztec 2D barcode format. */
-  AZTEC,
-
   /** CODABAR 1D format. */
   CODABAR,
 
@@ -38,9 +35,6 @@ public enum BarcodeFormat {
   /** Code 128 1D format. */
   CODE_128,
 
-  /** Data Matrix 2D barcode format. */
-  DATA_MATRIX,
-
   /** EAN-8 1D format. */
   EAN_8,
 
@@ -49,12 +43,6 @@ public enum BarcodeFormat {
 
   /** ITF (Interleaved Two of Five) 1D format. */
   ITF,
-
-  /** MaxiCode 2D barcode format. */
-  MAXICODE,
-
-  /** PDF417 format. */
-  PDF_417,
 
   /** QR Code 2D barcode format. */
   QR_CODE,

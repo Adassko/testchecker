@@ -18,6 +18,7 @@ package com.google.zxing.client.android.result;
 
 import com.google.zxing.Result;
 import com.google.zxing.client.android.CaptureActivity;
+import com.google.zxing.client.android.result.TextResultHandler;
 import com.google.zxing.client.result.ParsedResult;
 import com.google.zxing.client.result.ResultParser;
 
@@ -32,12 +33,8 @@ public final class ResultHandlerFactory {
 
   public static ResultHandler makeResultHandler(CaptureActivity activity, Result rawResult) {
     ParsedResult result = parseResult(rawResult);
-//    switch (result.getType()) {
-      //case PRODUCT:
-//        return new ProductResultHandler(activity, result, rawResult);
-      //default:
-        return new TextResultHandler(activity, result, rawResult);
-    //}
+
+    return new TextResultHandler(activity, result, rawResult);
   }
 
   private static ParsedResult parseResult(Result rawResult) {

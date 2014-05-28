@@ -50,6 +50,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -520,6 +521,15 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
   }
 
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+	  if (event.getAction() == MotionEvent.ACTION_UP) {
+		  cameraManager.autoFocus();
+	  }
+	  
+      return super.onTouchEvent(event);
+  }
+  
   // Briefly show the contents of the barcode, then handle the result outside Barcode Scanner.
   private void handleDecodeExternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
 

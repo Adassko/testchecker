@@ -35,7 +35,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import com.google.zxing.client.android.clipboard.ClipboardInterface;
 
 /**
  * Barcode Scanner can share data like contacts and bookmarks by displaying a QR Code on screen,
@@ -82,17 +81,6 @@ public final class ShareActivity extends Activity {
     }
   };
 
-  private final Button.OnClickListener clipboardListener = new Button.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-      // Should always be true, because we grey out the clipboard button in onResume() if it's empty
-      CharSequence text = ClipboardInterface.getText(ShareActivity.this);
-      if (text != null) {
-        launchSearch(text.toString());
-      }
-    }
-  };
-
   private final View.OnKeyListener textListener = new View.OnKeyListener() {
     @Override
     public boolean onKey(View view, int keyCode, KeyEvent event) {
@@ -112,7 +100,7 @@ public final class ShareActivity extends Activity {
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
     intent.putExtra(Intents.Encode.TYPE, Contents.Type.TEXT);
     intent.putExtra(Intents.Encode.DATA, text);
-    intent.putExtra(Intents.Encode.FORMAT, BarcodeFormat.QR_CODE.toString());
+    intent.putExtra(Intents.Encode.FORMAT, BarcodeFormat.CODE_128.toString());
     startActivity(intent);
   }
 
@@ -124,15 +112,12 @@ public final class ShareActivity extends Activity {
     findViewById(R.id.share_contact_button).setOnClickListener(contactListener);
     findViewById(R.id.share_bookmark_button).setOnClickListener(bookmarkListener);
     findViewById(R.id.share_app_button).setOnClickListener(appListener);
-    clipboardButton = findViewById(R.id.share_clipboard_button);
-    clipboardButton.setOnClickListener(clipboardListener);
     findViewById(R.id.share_text_view).setOnKeyListener(textListener);
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    clipboardButton.setEnabled(ClipboardInterface.hasText(this));
   }
 
   @Override

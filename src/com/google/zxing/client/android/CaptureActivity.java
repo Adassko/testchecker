@@ -23,7 +23,6 @@ import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
-import com.google.zxing.client.android.clipboard.ClipboardInterface;
 import com.google.zxing.client.android.history.HistoryActivity;
 import com.google.zxing.client.android.history.HistoryItem;
 import com.google.zxing.client.android.history.HistoryManager;
@@ -515,10 +514,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         button.setVisibility(View.GONE);
       }
     }
-
-    if (copyToClipboard && !resultHandler.areContentsSecure()) {
-      ClipboardInterface.setText(displayContents, this);
-    }
   }
 
   @Override
@@ -551,11 +546,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         rawResultString = rawResultString.substring(0, 32) + " ...";
       }
       statusView.setText(getString(resultHandler.getDisplayTitle()) + " : " + rawResultString);
-    }
-
-    if (copyToClipboard && !resultHandler.areContentsSecure()) {
-      CharSequence text = resultHandler.getDisplayContents();
-      ClipboardInterface.setText(text, this);
     }
 
     if (source == IntentSource.NATIVE_APP_INTENT) {

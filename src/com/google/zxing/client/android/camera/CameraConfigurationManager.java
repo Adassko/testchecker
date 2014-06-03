@@ -92,18 +92,6 @@ final class CameraConfigurationManager {
     initializeTorch(parameters, prefs, safeMode);
 
     String focusMode = null;
-    if (prefs.getBoolean(PreferencesActivity.KEY_AUTO_FOCUS, true)) {
-      if (safeMode || prefs.getBoolean(PreferencesActivity.KEY_DISABLE_CONTINUOUS_FOCUS, false)) {
-        focusMode = findSettableValue(parameters.getSupportedFocusModes(),
-                                      Camera.Parameters.FOCUS_MODE_AUTO);
-      } else {
-        focusMode = findSettableValue(parameters.getSupportedFocusModes(),
-                                      Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
-                                      Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO,
-                                      Camera.Parameters.FOCUS_MODE_AUTO);
-      }
-    }
-    // Maybe selected auto-focus but not available, so fall through here:
     if (!safeMode && focusMode == null) {
       focusMode = findSettableValue(parameters.getSupportedFocusModes(),
                                     Camera.Parameters.FOCUS_MODE_MACRO,
@@ -111,6 +99,15 @@ final class CameraConfigurationManager {
     }
     if (focusMode != null) {
       parameters.setFocusMode(focusMode);
+    }
+    
+    String scene = findSettableValue(parameters.getSupportedSceneModes(),
+    		Camera.Parameters.SCENE_MODE_BARCODE,
+    		Camera.Parameters.SCENE_MODE_STEADYPHOTO,
+    		Camera.Parameters.SCENE_MODE_AUTO);
+    
+    if (scene != null) {
+    	parameters.setSceneMode(scene);
     }
 
     if (prefs.getBoolean(PreferencesActivity.KEY_INVERT_SCAN, false)) {
@@ -141,7 +138,7 @@ final class CameraConfigurationManager {
   Point getScreenResolution() {
     return screenResolution;
   }
-
+  
   boolean getTorchState(Camera camera) {
     if (camera != null) {
       Camera.Parameters parameters = camera.getParameters();

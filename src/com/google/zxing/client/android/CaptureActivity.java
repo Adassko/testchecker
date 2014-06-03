@@ -62,6 +62,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -98,7 +99,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private View resultView;
   private Result lastResult;
   private boolean hasSurface;
-  private boolean copyToClipboard;
   private IntentSource source;
   private String sourceUrl;
   private ScanFromWebPageManager scanFromWebPageManager;
@@ -108,7 +108,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private HistoryManager historyManager;
   private InactivityTimer inactivityTimer;
   private BeepManager beepManager;
-  private AmbientLightManager ambientLightManager;
 
   ViewfinderView getViewfinderView() {
     return viewfinderView;
@@ -135,7 +134,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     historyManager.trimHistory();
     inactivityTimer = new InactivityTimer(this);
     beepManager = new BeepManager(this);
-    ambientLightManager = new AmbientLightManager(this);
 
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
   }
@@ -173,50 +171,13 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
 
     beepManager.updatePrefs();
-    ambientLightManager.start(cameraManager);
 
     inactivityTimer.onResume();
 
-    Intent intent = getIntent();
-
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    copyToClipboard = prefs.getBoolean(PreferencesActivity.KEY_COPY_TO_CLIPBOARD, true)
-        && (intent == null || intent.getBooleanExtra(Intents.Scan.SAVE_HISTORY, true));
-
     source = IntentSource.NONE;
-    decodeFormats = null;
-    characterSet = null;
-
-    if (intent != null) {
-
-      String action = intent.getAction();
-      String dataString = intent.getDataString();
-
-      if (Intents.Scan.ACTION.equals(action)) {
-
-        // Scan the formats the intent requested, and return the result to the calling activity.
-        source = IntentSource.NATIVE_APP_INTENT;
-        decodeFormats = DecodeFormatManager.parseDecodeFormats(intent);
-        decodeHints = DecodeHintManager.parseDecodeHints(intent);
-
-        if (intent.hasExtra(Intents.Scan.WIDTH) && intent.hasExtra(Intents.Scan.HEIGHT)) {
-          int width = intent.getIntExtra(Intents.Scan.WIDTH, 0);
-          int height = intent.getIntExtra(Intents.Scan.HEIGHT, 0);
-          if (width > 0 && height > 0) {
-            cameraManager.setManualFramingRect(width, height);
-          }
-        }
-        
-        String customPromptMessage = intent.getStringExtra(Intents.Scan.PROMPT_MESSAGE);
-        if (customPromptMessage != null) {
-          statusView.setText(customPromptMessage);
-        }
-
-      }
-
-      characterSet = intent.getStringExtra(Intents.Scan.CHARACTER_SET);
-
-    }
+    decodeFormats = new ArrayList<BarcodeFormat>();
+    decodeFormats.add(BarcodeFormat.CODE_128);
+    characterSet = null;    
   }
 
   @Override
@@ -226,7 +187,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       handler = null;
     }
     inactivityTimer.onPause();
-    ambientLightManager.stop();
     cameraManager.closeDriver();
     if (!hasSurface) {
       SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
@@ -257,6 +217,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         }
         break;
       case KeyEvent.KEYCODE_FOCUS:
+    	  cameraManager.autoFocus();
+    	  return true;
       case KeyEvent.KEYCODE_CAMERA:
         // Handle these events so they don't launch the Camera app
         return true;
@@ -270,7 +232,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
     return super.onKeyDown(keyCode, event);
   }
-
+  
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     MenuInflater menuInflater = getMenuInflater();
@@ -293,10 +255,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         break;
       case R.id.menu_settings:
         intent.setClassName(this, PreferencesActivity.class.getName());
-        startActivity(intent);
-        break;
-      case R.id.menu_help:
-        intent.setClassName(this, HelpActivity.class.getName());
         startActivity(intent);
         break;
       default:

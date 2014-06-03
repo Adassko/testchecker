@@ -64,6 +64,7 @@ final class DecodeHandler extends Handler {
     }
   }
 
+  long last = 0; 
   /**
    * Decode the data within the viewfinder rectangle, and time how long it took. For efficiency,
    * reuse the same reader objects from one decode to the next.
@@ -74,6 +75,11 @@ final class DecodeHandler extends Handler {
    */
   private void decode(byte[] data, int width, int height) {
     long start = System.currentTimeMillis();
+    if (last != 0)
+    {
+    	Log.d(TAG, "Next frame in " + (start - last) + " ms");
+    }
+	last = start;
     Result rawResult = null;
     PlanarYUVLuminanceSource source = activity.getCameraManager().buildLuminanceSource(data, width, height);
     if (source != null) {
@@ -92,6 +98,8 @@ final class DecodeHandler extends Handler {
       // Don't log the barcode contents for security.
       long end = System.currentTimeMillis();
       Log.d(TAG, "Found barcode in " + (end - start) + " ms");
+      Log.d(TAG, rawResult.getText());
+      Log.d(TAG, rawResult.toString());
       if (handler != null) {
         Message message = Message.obtain(handler, R.id.decode_succeeded, rawResult);
         Bundle bundle = new Bundle();

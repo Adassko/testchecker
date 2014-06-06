@@ -175,8 +175,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     inactivityTimer.onResume();
 
     source = IntentSource.NONE;
-    decodeFormats = new ArrayList<BarcodeFormat>();
-    decodeFormats.add(BarcodeFormat.CODE_128);
+    decodeFormats = null; //new ArrayList<BarcodeFormat>();
+    //decodeFormats.add(BarcodeFormat.CODE_128);
     characterSet = null;    
   }
 

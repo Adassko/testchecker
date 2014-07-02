@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import pl.adamp.testchecker.test.TestReader;
+
 /**
  * MultiFormatReader is a convenience class and the main entry point into the library for most uses.
  * By default it attempts to decode all barcode formats that the library supports. Optionally, you
@@ -98,23 +100,17 @@ public final class MultiFormatReader implements Reader {
     Collection<Reader> readers = new ArrayList<Reader>();
     if (formats != null) {
       boolean addOneDReader =
-          formats.contains(BarcodeFormat.UPC_A) ||
-          formats.contains(BarcodeFormat.UPC_E) ||
           formats.contains(BarcodeFormat.EAN_13) ||
-          formats.contains(BarcodeFormat.EAN_8) ||
-          formats.contains(BarcodeFormat.CODABAR) ||
-          formats.contains(BarcodeFormat.CODE_39) ||
-          formats.contains(BarcodeFormat.CODE_93) ||
-          formats.contains(BarcodeFormat.CODE_128) ||
-          formats.contains(BarcodeFormat.ITF) ||
-          formats.contains(BarcodeFormat.RSS_14) ||
-          formats.contains(BarcodeFormat.RSS_EXPANDED);
+          formats.contains(BarcodeFormat.CODE_128);
       // Put 1D readers upfront in "normal" mode
       if (addOneDReader && !tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));
       }
       if (formats.contains(BarcodeFormat.QR_CODE)) {
         readers.add(new QRCodeReader());
+      }
+      if (formats.contains(BarcodeFormat.TEST)) {
+    	readers.add(new TestReader());
       }
       // At end in "try harder" mode
       if (addOneDReader && tryHarder) {
@@ -127,6 +123,7 @@ public final class MultiFormatReader implements Reader {
       }
 
       readers.add(new QRCodeReader());
+      readers.add(new TestReader());
 
       if (tryHarder) {
         readers.add(new MultiFormatOneDReader(hints));

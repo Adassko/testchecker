@@ -203,7 +203,7 @@ public abstract class UPCEANReader extends OneDReader {
       // continue
     }
 
-    if (format == BarcodeFormat.EAN_13 || format == BarcodeFormat.UPC_A) {
+    if (format == BarcodeFormat.EAN_13) {
       String countryID = eanManSupport.lookupCountryIdentifier(resultString);
       if (countryID != null) {
         decodeResult.putMetadata(ResultMetadataType.POSSIBLE_COUNTRY, countryID);

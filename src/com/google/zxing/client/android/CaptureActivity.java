@@ -33,7 +33,6 @@ import com.google.zxing.client.android.share.ShareActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -176,8 +175,8 @@ public final class CaptureActivity extends Activity implements
 
 		inactivityTimer.onResume();
 
-		decodeFormats = null; // new ArrayList<BarcodeFormat>();
-		// decodeFormats.add(BarcodeFormat.CODE_128);
+		decodeFormats = new ArrayList<BarcodeFormat>();
+		decodeFormats.add(BarcodeFormat.TEST);
 		characterSet = null;
 	}
 
@@ -375,8 +374,7 @@ public final class CaptureActivity extends Activity implements
 				paint.setStrokeWidth(4.0f);
 				drawLine(canvas, paint, points[0], points[1], scaleFactor);
 			} else if (points.length == 4
-					&& (rawResult.getBarcodeFormat() == BarcodeFormat.UPC_A || rawResult
-							.getBarcodeFormat() == BarcodeFormat.EAN_13)) {
+					&& (rawResult.getBarcodeFormat() == BarcodeFormat.EAN_13)) {
 				// Hacky special case -- draw two lines, for the barcode and
 				// metadata
 				drawLine(canvas, paint, points[0], points[1], scaleFactor);

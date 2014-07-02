@@ -50,7 +50,7 @@ public final class ShareActivity extends Activity {
   private static final int PICK_CONTACT = 1;
   private static final int PICK_APP = 2;
 
-  private View clipboardButton;
+  //private View clipboardButton;
 
   private final Button.OnClickListener contactListener = new Button.OnClickListener() {
     @Override

@@ -16,8 +16,6 @@
 
 package com.google.zxing.qrcode.detector;
 
-import android.util.Log;
-
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.FormatException;
 import com.google.zxing.NotFoundException;
@@ -45,7 +43,6 @@ public class Detector {
 
   public Detector(BitMatrix image) {
     this.image = image;
-    Log.d("BITMATRIX", image.toString());
   }
 
   protected final BitMatrix getImage() {

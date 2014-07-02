@@ -39,28 +39,6 @@ import java.util.regex.Pattern;
  */
 public abstract class ResultParser {
 
-  private static final ResultParser[] PARSERS = {
-      new BookmarkDoCoMoResultParser(),
-      new AddressBookDoCoMoResultParser(),
-      new EmailDoCoMoResultParser(),
-      new AddressBookAUResultParser(),
-      new VCardResultParser(),
-      new BizcardResultParser(),
-      new VEventResultParser(),
-      new EmailAddressResultParser(),
-      new SMTPResultParser(),
-      new TelResultParser(),
-      new SMSMMSResultParser(),
-      new SMSTOMMSTOResultParser(),
-      new GeoResultParser(),
-      new WifiResultParser(),
-      new URLTOResultParser(),
-      new URIResultParser(),
-      new ISBNResultParser(),
-      new ProductResultParser(),
-      new ExpandedProductResultParser(),
-  };
-
   private static final Pattern DIGITS = Pattern.compile("\\d*");
   private static final Pattern ALPHANUM = Pattern.compile("[a-zA-Z0-9]*");
   private static final Pattern AMPERSAND = Pattern.compile("&");
@@ -83,12 +61,6 @@ public abstract class ResultParser {
   }
 
   public static ParsedResult parseResult(Result theResult) {
-    for (ResultParser parser : PARSERS) {
-      ParsedResult result = parser.parse(theResult);
-      if (result != null) {
-        return result;
-      }
-    }
     return new TextParsedResult(theResult.getText(), null);
   }
 

@@ -115,10 +115,15 @@ public final class CameraManager {
     }
 
   }
-  
+
+  private boolean macro = false;
   public synchronized void autoFocus() {
 	  if (camera != null) {
-		  camera.autoFocus(null);
+		  macro ^= true;
+		  Camera.Parameters parameters = camera.getParameters();
+		  parameters.setFocusMode(macro ? Camera.Parameters.FOCUS_MODE_MACRO : Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+		  camera.setParameters(parameters);;
+		  if (macro) camera.autoFocus(null); else camera.cancelAutoFocus();
 	  }
   }
 

@@ -19,7 +19,9 @@ package com.google.zxing.client.android.camera;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Camera;
+import android.hardware.Camera.Area;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
@@ -91,16 +93,23 @@ final class CameraConfigurationManager {
 
     initializeTorch(parameters, prefs, safeMode);
 
+   	if (parameters.getMaxNumMeteringAreas() > 0) {
+    	List<Area> areaList = new ArrayList<Area>();
+    	areaList.add(new Area(new Rect(-50, -50, 50, 50), 100));
+    	parameters.setFocusAreas(areaList);
+    }
+
     String focusMode = null;
-    if (!safeMode && focusMode == null) {
+   	if (!safeMode && focusMode == null) {
       focusMode = findSettableValue(parameters.getSupportedFocusModes(),
+    		  						Camera.Parameters.FOCUS_MODE_AUTO,
                                     Camera.Parameters.FOCUS_MODE_MACRO,
                                     Camera.Parameters.FOCUS_MODE_EDOF);
     }
     if (focusMode != null) {
       parameters.setFocusMode(focusMode);
     }
-    
+   
     String scene = findSettableValue(parameters.getSupportedSceneModes(),
     		Camera.Parameters.SCENE_MODE_BARCODE,
     		Camera.Parameters.SCENE_MODE_STEADYPHOTO,
@@ -108,14 +117,6 @@ final class CameraConfigurationManager {
     
     if (scene != null) {
     	parameters.setSceneMode(scene);
-    }
-
-    if (prefs.getBoolean(PreferencesActivity.KEY_INVERT_SCAN, false)) {
-      String colorMode = findSettableValue(parameters.getSupportedColorEffects(),
-                                           Camera.Parameters.EFFECT_NEGATIVE);
-      if (colorMode != null) {
-        parameters.setColorEffect(colorMode);
-      }
     }
 
     parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);

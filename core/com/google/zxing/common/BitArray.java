@@ -74,6 +74,10 @@ public final class BitArray {
   public void set(int i) {
     bits[i / 32] |= 1 << (i & 0x1F);
   }
+  
+  public void unset(int i) {
+	bits[i / 32] &= ~(1 << (i & 0x1F));
+  }
 
   /**
    * Flips bit i.

@@ -374,9 +374,10 @@ public final class CaptureActivity extends Activity implements
 				paint.setStrokeWidth(4.0f);
 				drawLine(canvas, paint, points[0], points[1], scaleFactor);
 			} else if (points.length == 4
-					&& (rawResult.getBarcodeFormat() == BarcodeFormat.EAN_13)) {
+					&& (rawResult.getBarcodeFormat() == BarcodeFormat.EAN_13 || rawResult.getBarcodeFormat() == BarcodeFormat.TEST)) {
 				// Hacky special case -- draw two lines, for the barcode and
 				// metadata
+				// up and bootom for test
 				drawLine(canvas, paint, points[0], points[1], scaleFactor);
 				drawLine(canvas, paint, points[2], points[3], scaleFactor);
 			} else {

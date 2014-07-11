@@ -253,7 +253,7 @@ public abstract class OneDReader implements Reader {
    *  the total variance between counters and patterns equals the pattern length, higher values mean
    *  even more variance
    */
-  protected static int patternMatchVariance(int[] counters,
+  public static int patternMatchVariance(int[] counters,
                                             int[] pattern,
                                             int maxIndividualVariance) {
     int numCounters = counters.length;

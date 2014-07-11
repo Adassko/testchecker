@@ -87,6 +87,8 @@ public enum DecodeHintType {
    * is found. Maps to a {@link ResultPointCallback}.
    */
   NEED_RESULT_POINT_CALLBACK(ResultPointCallback.class),
+  
+  NEED_TEST_AREA(ResultPointCallback.class)
 
   // End of enumeration values.
   ;

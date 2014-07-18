@@ -144,17 +144,17 @@ public final class BitMatrix {
     return row;
   }
   
-  public BitArray getColumn(int x, BitArray column) {
+  public BitArray getColumn(int x, BitArray column, boolean reverse) {
 	if (column == null || column.getSize() < height) {
 		column = new BitArray(height);
 	}
 	for (int offset = x >> 5, y = 0; y < height; y ++, offset += rowSize) {
 	    if (((bits[offset] >>> (x & 0x1f)) & 1) != 0)
-	    	column.set(y); else column.unset(y);
+	    	column.set(reverse ? height - 1 - y : y); else column.unset(reverse ? height - 1 - y : y);
 	}
 	return column;
   }
-
+  
   /**
    * @param y row to set
    * @param row {@link BitArray} to copy from

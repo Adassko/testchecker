@@ -41,7 +41,7 @@ public class ResultPoint {
   public final float getY() {
     return y;
   }
-
+  
   @Override
   public final boolean equals(Object other) {
     if (other instanceof ResultPoint) {

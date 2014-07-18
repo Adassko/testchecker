@@ -25,5 +25,9 @@ package com.google.zxing;
 public interface ResultPointCallback {
 
   void foundPossibleResultPoint(ResultPoint point);
+  
+  void foundBadPoint(ResultPoint point);
+  
+  void foundArea(ResultPoint[] points);
 
 }

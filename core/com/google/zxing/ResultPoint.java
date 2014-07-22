@@ -129,6 +129,13 @@ public class ResultPoint {
     float bY = pointB.y;
     return ((pointC.x - bX) * (pointA.y - bY)) - ((pointC.y - bY) * (pointA.x - bX));
   }
-
-
+  
+  public static ResultPoint lerp(ResultPoint a, ResultPoint b, float alpha) {
+	float invAlpha = 1 - alpha;
+	return new ResultPoint(a.x * invAlpha + b.x * alpha, a.y * invAlpha + b.y * alpha);
+  }
+  
+  public static double getAtan2(ResultPoint upper, ResultPoint lower) {
+	  return Math.atan2(lower.y -  upper.y, upper.x - lower.x);
+  }
 }

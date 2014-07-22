@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,12 +26,13 @@ import com.google.zxing.ResultPoint;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.detector.MathUtils;
 import com.google.zxing.common.detector.MonochromeRectangleDetector;
 import com.google.zxing.common.detector.WhiteRectangleDetector;
 import com.google.zxing.oned.OneDReader;
 
 public class TestReader implements Reader {
-	private static final int MAX_AVG_VARIANCE = 42;
+	private static final int MAX_AVG_VARIANCE = 34;
 	private final String TAG = TestReader.class.getName();
 	
 	static final int[][] LOWER_PATTERNS = {
@@ -117,26 +119,29 @@ public class TestReader implements Reader {
 		return decode(image, null);
 	}
 
-	private Marker findPatternOnColumn(BitMatrix matrix, int x, int[][] patterns, boolean reverse) throws NotFoundException {
-		BitArray column = matrix.getColumn(x, null, reverse);
-		int height = matrix.getHeight();
+	private Marker findPatternOnColumn(BitArray column, int x, int[][] patterns, boolean reverse, int limit) throws NotFoundException {
+		int height = column.getSize();
 		boolean silenceZoneClear;
 
 		int patternSize = patterns[0].length;
 		int[] counters = new int[patternSize];
-		int position = 0, patternStart, silenceZoneLength;
+		int position = 0, patternStart, firstUnset, maxLineHeight, minLineHeight;
 
 		do {
 			// znajdü pojedynczπ kreskÍ poprzedzonπ czystπ strefπ 5x
 			do {
-				position = column.getNextSet(position);
-				patternStart = position;
-				position = column.getNextUnset(position);
-				counters[0] = position - patternStart; // wysokosc pojedynczej kreski
-				silenceZoneLength = counters[0] * 5;
-				silenceZoneClear = column.isRange(Math.max(0, patternStart - silenceZoneLength), patternStart, false);
+				patternStart = column.getNextSet(position);
+				int silenceZoneLength = patternStart - position; 
+				firstUnset = column.getNextUnset(patternStart);
+				position = firstUnset;
+				
+				int singleLineHeight = firstUnset - patternStart; // wysokoúÊ pojedynczej kreski
+				counters[0] = singleLineHeight;
+				maxLineHeight = 5 * singleLineHeight;
+				minLineHeight = singleLineHeight / 2;
+				silenceZoneClear = silenceZoneLength >= Math.min(patternStart, maxLineHeight);
 			}
-			while (!silenceZoneClear && position < height);
+			while (!silenceZoneClear && position < limit);
 			
 			// jeúli dotarliúmy do koÒca i nadal nie znaleüliúmy niczego
 			if (!silenceZoneClear) break;
@@ -144,20 +149,28 @@ public class TestReader implements Reader {
 			int i;
 			boolean isWhite = true;
 	
-			for (i = 1; i < patternSize && position < height; i ++) {
+			for (i = 1; i < patternSize && position < limit; i ++) {
 				int y = isWhite ? column.getNextSet(position) : column.getNextUnset(position);
 				isWhite ^= true;
 				
 				counters[i] = y - position;
 				position = y;
 				
-				if (counters[i] > silenceZoneLength) break; // za d≥uga przerwa - szukaj kolejnego kodu
+				if (counters[i] > maxLineHeight || counters[i] < minLineHeight) {
+					// za d≥uga lub za krÛtka linia/przerwa -> szukaj kolejnego kodu
+					break;
+				}
 			}
-			if (i < patternSize) continue;
+			if (i < patternSize) {
+				// cofnij siÍ do pierwszego pustego miejsca w b≥Ídnie rozpoznawanym kodzie
+				position = firstUnset;
+				continue;
+			}
 			
-			silenceZoneClear = column.isRange(position, Math.min(height, position + silenceZoneLength), false);
+			// sprawdzenie czy istnieje "czysta strefa" z przodu kodu
+			silenceZoneClear = position < limit && column.isRange(position, Math.min(limit, position + maxLineHeight), false);
 		}
-		while (!silenceZoneClear && position < height);
+		while (!silenceZoneClear && position < limit);
 		
 		// position >= height -> nie znaleüliúmy niczego
 		if (!silenceZoneClear) throw NotFoundException.getNotFoundInstance();
@@ -178,26 +191,32 @@ public class TestReader implements Reader {
 	}
 
 	private class TestRegion {
-		private int questionNumber;
+		private int regionCode;
 		private ResultPoint upper;
 		private ResultPoint lower;
+		private int angle;
 
-		public int getQuestionNumber() {
-			return questionNumber;
+		public int getRegionCode() {
+			return regionCode;
 		}
 
-		public ResultPoint getUpper() {
+		public ResultPoint getUpperPoint() {
 			return upper;
 		}
 		
-		public ResultPoint getLower() {
+		public ResultPoint getLowerPoint() {
 			return lower;
 		}
+		
+		public int getSlopeAngle() {
+			return angle;
+		}
 
-		public TestRegion(int questionNumber, ResultPoint upper, ResultPoint lower) {
-			this.questionNumber = questionNumber;
-			this.upper = upper;
-			this.lower = lower;
+		public TestRegion(int regionCode, ResultPoint upperPoint, ResultPoint lowerPoint) {
+			this.regionCode = regionCode;
+			this.upper = upperPoint;
+			this.lower = lowerPoint;
+			this.angle = (int)Math.toDegrees(ResultPoint.getAtan2(upperPoint, lowerPoint));
 		}
 	}
 	
@@ -219,27 +238,6 @@ public class TestReader implements Reader {
 		}
 	}
 
-	List<Marker> getLowerMarkers(BitMatrix matrix) {
-		List<Marker> markers = new ArrayList<Marker>();
-		
-		int width = matrix.getWidth();
-		for (int x = 0; x < width; x ++) {
-			try {
-				Marker marker = findPatternOnColumn(matrix, x, LOWER_PATTERNS, true);
-				markers.add(marker);
-			}
-			catch (NotFoundException ex) { }
-		}
-		
-		return clearList(markers);
-	}
-	
-	float getDerivative(ResultPoint a, ResultPoint b) {
-		float deltaX = b.getX() - a.getY();
-		float deltaY = b.getY() - a.getY();
-		return deltaY / deltaX;
-	}
-	
 	List<Marker> rejectHighDeviation(List<Marker> markers) {
 		int initSize = markers.size();
 		if (initSize == 0) return markers;
@@ -258,7 +256,6 @@ public class TestReader implements Reader {
 				continue;
 			}
 		}
-		Log.d(TAG, "Zostawiono " + markers.size() + " z " + initSize);
 		return markers;
 	}
 	
@@ -311,31 +308,38 @@ public class TestReader implements Reader {
 	}
 	
 	List<Marker> clearList(List<Marker> markers) {
-		List<Marker> result = markers;
-		for (int i = 0; i < 2; i ++) {
-			result = rejectHighDeviation(averageMarkersPositions(result));
-		}
-		return result;
+		return averageMarkersPositions(rejectHighDeviation(markers));
 	}
 	
-	List<Marker> getUpperMarkers(BitMatrix matrix) {
-		List<Marker> markers = new ArrayList<Marker>();
+	List<TestRegion> detectTestAreas(BitMatrix matrix) {
+		List<Marker> upperMarkers = new ArrayList<Marker>(),
+				lowerMarkers = new ArrayList<Marker>();
 
-		int width = matrix.getWidth();
-		for (int x = 0; x < width; x ++) {
+		int width = matrix.getWidth(), height = matrix.getHeight();
+		BitArray column = null;
+		for (int x = 0; x < width; x += 2) {
+			int limit = height;
+			column = matrix.getColumn(x, column, false);
 			try {
-				Marker marker = findPatternOnColumn(matrix, x, CODE_PATTERNS, false);
-				markers.add(marker);
+				Marker marker = findPatternOnColumn(column, x, CODE_PATTERNS, false, height);
+				upperMarkers.add(marker);
+				limit = (int)marker.getPosition().getY();
+			}
+			catch (NotFoundException ex) { }
+			column.reverse();
+			try {
+				Marker marker = findPatternOnColumn(column, x, LOWER_PATTERNS, true, limit);
+				lowerMarkers.add(marker);
 			}
 			catch (NotFoundException ex) { }
 		}
 		
-		return clearList(markers);
+		return matchMarkers(clearList(upperMarkers), clearList(lowerMarkers));
 	}
-
+	
 	List<TestRegion> matchMarkers(List<Marker> upperMarkers, List<Marker> lowerMarkers) {
 		List<TestRegion> result = new ArrayList<TestRegion>();
-		List<Float> ctgs = new ArrayList<Float>();
+		List<Integer> angles = new ArrayList<Integer>();
 		
 		int lowerPos = 0;
 		int lowerSize = lowerMarkers.size();
@@ -349,36 +353,87 @@ public class TestReader implements Reader {
 					continue;
 				}
 				
-				float ctg = (upper.getPosition().getX() - lower.getPosition().getX()) /
-						(upper.getPosition().getY() - lower.getPosition().getY());
-				if (Math.abs(ctg) > 0.5) {
-					continue;
-				}
-				
 				if (upper.getCode() % LOWER_PATTERNS.length == lower.getCode()) {
-					result.add(new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition()));
-					ctgs.add(ctg);
-					lowerPos = j;
+					TestRegion region = new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition());
+					
+					int angle = region.getSlopeAngle();
+					Log.d(TAG, "" + angle);
+					if (angle > 45 && angle < 135) {
+						result.add(region);
+						angles.add(angle);
+						lowerPos = j;
+					}
 				}
 			}
 		}
-		if (ctgs.size() > 1) {
-			Collections.sort(ctgs);
-			float ctgMedian = Math.abs(ctgs.get(ctgs.size() / 2));
+		
+		// odrzuÊ odpowiedzi o kπcie nachylenia odstajπce od mediany o ponad 5 stopni
+		if (angles.size() > 1) {
+			Collections.sort(angles);
+			int angleMedian = MathUtils.getMedian(angles);
 			for (int i = result.size() - 1; i >= 0; i --) {
 				TestRegion region = result.get(i);
-				float ctg = (region.getUpper().getX() - region.getLower().getX()) /
-						(region.getUpper().getY() - region.getLower().getY());
-				if (Math.abs(ctg - ctgMedian) > 0.1)
+				
+				if (Math.abs(region.getSlopeAngle() - angleMedian) > 5)
 					result.remove(i);
 			}
 		}
 		return result;
 	}
 	
-	ResultPoint lerp(ResultPoint a, ResultPoint b, float factor) {
-		return new ResultPoint(a.getX() * (1 - factor) + b.getX() * factor,
-				a.getY() * (1 - factor) + b.getY() * factor);
+	private class TickBox {
+		boolean isMistake;
+		boolean ticked;
+		int questionId;
+		ResultPoint boxCenter;
+		
+		public TickBox(int questionId, boolean ticked, boolean isMistake, ResultPoint boxCenter) {
+			this.questionId = questionId;
+			this.ticked = ticked;
+			this.isMistake = isMistake;
+			this.boxCenter = boxCenter;
+		}
+
+		public boolean isMistake() {
+			return isMistake;
+		}
+
+		public boolean isTicked() {
+			return ticked;
+		}
+
+		public int getQuestionId() {
+			return questionId;
+		}
+
+		public ResultPoint getBoxCenter() {
+			return boxCenter;
+		}
+	}
+	
+	private boolean isTicked(BitMatrix matrix, ResultPoint center, float range) {
+		return matrix.get((int)center.getX(), (int)center.getY());
+	}
+	
+	private void detectGivenAnswers(BitMatrix matrix, List<TestRegion> testRegions) {
+		int answersCount = 4;
+		int margin = 5;
+		int boxHeight = 27;
+		float halfBoxHeight = boxHeight / 2;
+		
+		for (TestRegion region : testRegions) {
+			int totalHeight = answersCount * boxHeight + margin * 2;
+			
+			for (int i = 0; i < answersCount; i++) {
+				float boxY = margin + i * boxHeight + halfBoxHeight;
+				float dpp = ResultPoint.distance(region.getUpperPoint(), region.getLowerPoint()) / totalHeight;
+				ResultPoint center = ResultPoint.lerp(region.getUpperPoint(), region.getLowerPoint(), boxY / totalHeight);
+				if (isTicked(matrix, center, halfBoxHeight * dpp))
+					resultPointCallback.foundPossibleResultPoint(center);
+				else
+					resultPointCallback.foundBadPoint(center);
+			}
+		}
 	}
 	
 	@Override
@@ -390,7 +445,11 @@ public class TestReader implements Reader {
 
 		BitMatrix matrix = image.getBlackMatrix();
 		
-		List<TestRegion> testRegions = matchMarkers(getUpperMarkers(matrix), getLowerMarkers(matrix));
+		List<TestRegion> testRegions = detectTestAreas(matrix);
+		
+		detectGivenAnswers(matrix, testRegions);
+		
+		
 		/*for (TestRegion region : testRegions) {
 			for (int i = 1; i < 5; i ++)
 				resultPointCallback.foundPossibleResultPoint(lerp(region.getUpper(), region.getLower(), 0.2f * i));
@@ -398,8 +457,8 @@ public class TestReader implements Reader {
 		}*/
 		
 		if (testRegions.size() > 2) {
-			ResultPoint[] area = { testRegions.get(0).getUpper(), testRegions.get(testRegions.size() - 1).getUpper(),
-					testRegions.get(testRegions.size() - 1).getLower(), testRegions.get(0).getLower() };
+			ResultPoint[] area = { testRegions.get(0).getUpperPoint(), testRegions.get(testRegions.size() - 1).getUpperPoint(),
+					testRegions.get(testRegions.size() - 1).getLowerPoint(), testRegions.get(0).getLowerPoint() };
 			resultPointCallback.foundArea(area);
 		}
 		Log.d(TAG, "Pytan: " + testRegions.size());

@@ -16,6 +16,10 @@
 
 package com.google.zxing.common.detector;
 
+import java.util.List;
+
+import com.google.zxing.ResultPoint;
+
 public final class MathUtils {
 
   private MathUtils() {
@@ -40,5 +44,11 @@ public final class MathUtils {
     int yDiff = aY - bY;
     return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
-
+  
+  public static int getMedian(List<Integer> list) {
+	  if ((list.size() & 1) == 1)
+		  return list.get(list.size() / 2);
+	  else
+		  return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
+  }
 }

@@ -2,8 +2,18 @@ package pl.adamp.testchecker.test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
+
+
+
+
+import android.util.Log;
+
+
 //import android.util.Log;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
@@ -21,7 +31,7 @@ import com.google.zxing.oned.OneDReader;
 
 public class TestReader implements Reader {
 	private static final int MAX_AVG_VARIANCE = 34;
-//	private final String TAG = TestReader.class.getName();
+	private final String TAG = TestReader.class.getName();
 	
 	static final int[][] LOWER_PATTERNS = {
 		{1, 1, 2, 1, 2}, // 0
@@ -99,8 +109,18 @@ public class TestReader implements Reader {
 	      {1, 3, 3, 2, 1, 1, 1}
 	};
 	
+	public static final int MAX_ANSWERS_COUNT = CODE_PATTERNS.length;
+
+	private HashMap<TestResult, Integer> possibleResults;
+	private TestResult[] acceptedResults;
+	
 	private ResultPointCallback resultPointCallback = null;
 	private TestResultCallback testResultCallback = null;
+	
+	public TestReader() {
+		possibleResults = new HashMap<TestResult, Integer>(200);
+		acceptedResults = new TestResult[MAX_ANSWERS_COUNT];
+	}
 	
 	@Override
 	public Result decode(BinaryBitmap image) throws NotFoundException,
@@ -183,7 +203,7 @@ public class TestReader implements Reader {
 		private int regionCode;
 		private ResultPoint upper;
 		private ResultPoint lower;
-		private int angle;
+		private float angle;
 
 		public int getRegionCode() {
 			return regionCode;
@@ -197,7 +217,7 @@ public class TestReader implements Reader {
 			return lower;
 		}
 		
-		public int getSlopeAngle() {
+		public float getSlopeAngle() {
 			return angle;
 		}
 
@@ -205,7 +225,7 @@ public class TestReader implements Reader {
 			this.regionCode = regionCode;
 			this.upper = upperPoint;
 			this.lower = lowerPoint;
-			this.angle = (int)Math.toDegrees(ResultPoint.getAtan2(upperPoint, lowerPoint));
+			this.angle = (float)ResultPoint.getAtan2(upperPoint, lowerPoint);
 		}
 	}
 	
@@ -227,7 +247,7 @@ public class TestReader implements Reader {
 		}
 	}
 
-	List<Marker> rejectHighDeviation(List<Marker> markers) {
+	List<Marker> rejectOddResults(List<Marker> markers) {
 		int initSize = markers.size();
 		if (initSize == 0) return markers;
 
@@ -297,7 +317,7 @@ public class TestReader implements Reader {
 	}
 	
 	List<Marker> clearList(List<Marker> markers) {
-		return averageMarkersPositions(rejectHighDeviation(markers));
+		return averageMarkersPositions(rejectOddResults(markers));
 	}
 	
 	List<TestRegion> detectTestAreas(BitMatrix matrix) {
@@ -328,7 +348,7 @@ public class TestReader implements Reader {
 	
 	List<TestRegion> matchMarkers(List<Marker> upperMarkers, List<Marker> lowerMarkers) {
 		List<TestRegion> result = new ArrayList<TestRegion>();
-		List<Integer> angles = new ArrayList<Integer>();
+		List<Float> angles = new ArrayList<Float>();
 		
 		int lowerPos = 0;
 		int lowerSize = lowerMarkers.size();
@@ -345,9 +365,9 @@ public class TestReader implements Reader {
 				if (upper.getCode() % LOWER_PATTERNS.length == lower.getCode()) {
 					TestRegion region = new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition());
 					
-					int angle = region.getSlopeAngle();
+					float angle = region.getSlopeAngle();
 					//Log.d(TAG, "" + angle);
-					if (angle > 45 && angle < 135) {
+					if (Math.abs(Math.PI / 2 - angle) < Math.PI / 4) { // odchylenie od pionu < 45 stopni
 						result.add(region);
 						angles.add(angle);
 						lowerPos = j;
@@ -359,11 +379,11 @@ public class TestReader implements Reader {
 		// odrzuæ odpowiedzi o k¹cie nachylenia odstaj¹ce od mediany o ponad 5 stopni
 		if (angles.size() > 1) {
 			Collections.sort(angles);
-			int angleMedian = MathUtils.getMedian(angles);
+			float angleMedian = MathUtils.getMedian(angles);
 			for (int i = result.size() - 1; i >= 0; i --) {
 				TestRegion region = result.get(i);
 				
-				if (Math.abs(region.getSlopeAngle() - angleMedian) > 5)
+				if (Math.abs(region.getSlopeAngle() - angleMedian) > Math.PI / 36) // odchylenie od mediany > 5 stopni
 					result.remove(i);
 			}
 		}
@@ -376,16 +396,16 @@ public class TestReader implements Reader {
 		int r = (int)range;
 		
 		int checked = 0;
-		for (int x = cX - r; x < cX + r; x ++) {
+/*		for (int x = cX - r; x < cX + r; x ++) {
 			if (matrix.get(x, cY)) {
 				checked ++;
 				if (checked > 4) return true;
 			}
-		}
+		}*/
 		for (int y = cY - r; y < cY + r; y ++) {
 			if (y != cY && matrix.get(cX, y)) {
 				checked ++;
-				if (checked > 4) return true;
+				if (checked > 3) return true;
 			}
 		}
 		return false;
@@ -403,6 +423,7 @@ public class TestReader implements Reader {
 			int totalHeight = answersCount * boxAreaHeight + margin * 2;
 			
 			TestResult result = new TestResult(region.getRegionCode() + 1);
+			List<TestResultMarker> markers = new ArrayList<TestResultMarker>(2);
 			
 			for (int i = 0; i < answersCount; i++) {
 				float boxY = margin + i * boxAreaHeight + halfBoxAreaHeight;
@@ -411,10 +432,40 @@ public class TestReader implements Reader {
 				
 				if (isTicked(matrix, center, halfBoxHeight * dpp)) {
 					result.addMarkedAnswer(i);
+					markers.add(new TestResultMarker(center.getX(), center.getY(), boxHeight * dpp, region.getSlopeAngle(), result));
+					resultPointCallback.foundPossibleResultPoint(center);
 				}
 			}
 			
 			testResultCallback.foundPossibleAnswer(result);
+			foundPossibleAnswer(result);
+		}
+	}
+	
+	private void foundPossibleAnswer(TestResult answer) {
+		int questionNo = answer.getQuestionNo();
+		if (questionNo >= MAX_ANSWERS_COUNT) return;
+
+		Integer reliability = possibleResults.get(answer);
+		if (reliability == null) reliability = 0;
+		
+		possibleResults.put(answer, ++reliability);
+
+		if (reliability > 2) {
+				TestResult accepted = acceptedResults[questionNo];
+				
+				if (accepted != null) {
+					if (accepted.isMarkedByUser())
+						return;
+					
+					Integer acceptedReliability = possibleResults.get(accepted);
+					if (acceptedReliability != null && acceptedReliability > reliability)
+						return;
+				}
+				
+				acceptedResults[questionNo] = answer;
+				
+				testResultCallback.foundAnswer(answer);
 		}
 	}
 	
@@ -433,28 +484,12 @@ public class TestReader implements Reader {
 		
 		detectGivenAnswers(matrix, testRegions);
 		
-		
-		/*for (TestRegion region : testRegions) {
-			for (int i = 1; i < 5; i ++)
-				resultPointCallback.foundPossibleResultPoint(lerp(region.getUpper(), region.getLower(), 0.2f * i));
-			//Log.d(TAG, "Znaleziono pytanie: " + region.getQuestionNumber());
-		}*/
-		
 		if (testRegions.size() > 2) {
 			ResultPoint[] area = { testRegions.get(0).getUpperPoint(), testRegions.get(testRegions.size() - 1).getUpperPoint(),
 					testRegions.get(testRegions.size() - 1).getLowerPoint(), testRegions.get(0).getLowerPoint() };
 			resultPointCallback.foundArea(area);
 		}
-		//Log.d(TAG, "Pytan: " + testRegions.size());
 		
-		
-/*		while ((y = column.getNextSet(y)) < height) {
-			findPatternOnColumn(column)
-			resultPointCallback.foundPossibleResultPoint(new ResultPoint(0, y));
-			y = column.getNextUnset(y);
-		}*/
-		//findAnswers(matrix);
-		//ResultPoint[] resultPoints = findTestArea(matrix);
 		
 		//return new Result("", new byte[] { }, resultPoints, BarcodeFormat.TEST);
 		throw NotFoundException.getNotFoundInstance();

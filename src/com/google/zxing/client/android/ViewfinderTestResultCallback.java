@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 ZXing authors
+d * Copyright (C) 2009 ZXing authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,11 @@
 
 package com.google.zxing.client.android;
 
+import java.util.List;
+
 import pl.adamp.testchecker.test.TestResult;
 import pl.adamp.testchecker.test.TestResultCallback;
+import pl.adamp.testchecker.test.TestResultMarker;
 
 import com.google.zxing.ResultPoint;
 import com.google.zxing.ResultPointCallback;
@@ -33,5 +36,10 @@ final class ViewfinderTestResultCallback implements TestResultCallback {
 	@Override
 	public void foundPossibleAnswer(TestResult answer) {
 		viewfinderView.addPossibleAnswer(answer);
+	}
+	
+	@Override
+	public void foundAnswer(TestResult answer) {
+		viewfinderView.addAnswer(answer);
 	}
 }

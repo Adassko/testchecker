@@ -16,6 +16,8 @@
 
 package com.google.zxing;
 
+import android.util.Log;
+
 import com.google.zxing.oned.MultiFormatOneDReader;
 import com.google.zxing.qrcode.QRCodeReader;
 
@@ -140,7 +142,7 @@ public final class MultiFormatReader implements Reader {
       }
     }
   }
-
+  
   private Result decodeInternal(BinaryBitmap image) throws NotFoundException {
     if (readers != null) {
       for (Reader reader : readers) {

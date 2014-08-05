@@ -29,18 +29,12 @@ import android.graphics.Path;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.util.SparseArray;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
+import pl.adamp.testchecker.test.TestReader;
 import pl.adamp.testchecker.test.TestResult;
 
 /**
@@ -57,7 +51,6 @@ public final class ViewfinderView extends View {
 	private static final int CURRENT_POINT_OPACITY = 0xA0;
 	private static final int MAX_RESULT_POINTS = 100; // 20;
 	private static final int POINT_SIZE = 6;
-	private static final int MAX_ANSWERS_COUNT = 60;
 
 	private CameraManager cameraManager;
 	private final Paint paint;
@@ -70,7 +63,6 @@ public final class ViewfinderView extends View {
 	private List<ResultPoint> possibleResultPoints;
 	private List<ResultPoint> lastPossibleResultPoints;
 	private TestResult[] acceptedResults;
-	private HashMap<TestResult, Integer> possibleResults;
 	private Paint areaPaint;
 	private ResultPoint[] areaPoints;
 	private int areaPointsValid = 0;
@@ -89,8 +81,7 @@ public final class ViewfinderView extends View {
 		resultPointColor = resources.getColor(R.color.possible_result_points);
 		scannerAlpha = 0;
 		possibleResultPoints = new ArrayList<ResultPoint>(5);
-		possibleResults = new HashMap<TestResult, Integer>(200);
-		acceptedResults = new TestResult[MAX_ANSWERS_COUNT];
+		acceptedResults = new TestResult[TestReader.MAX_ANSWERS_COUNT];
 
 		lastPossibleResultPoints = null;
 		areaPoints = null;
@@ -198,7 +189,7 @@ public final class ViewfinderView extends View {
 					}
 				}
 			}
-
+			
 			if (currentLast != null) {
 				paint.setAlpha(CURRENT_POINT_OPACITY / 2);
 				paint.setColor(resultPointColor);
@@ -211,7 +202,7 @@ public final class ViewfinderView extends View {
 					}
 				}
 			}
-
+			
 			// Request another update at the animation interval, but only repaint the laser line,
 			// not the entire viewfinder mask.
 			postInvalidateDelayed(ANIMATION_DELAY,
@@ -242,32 +233,12 @@ public final class ViewfinderView extends View {
 	}
 
 	public void addPossibleAnswer(TestResult answer) {
-		int questionNo = answer.getQuestionNo();
-		if (questionNo >= MAX_ANSWERS_COUNT) return;
-
-		synchronized (possibleResults) {
-			resultsFound ++;
-			Integer reliability = possibleResults.get(answer);
-			if (reliability == null) reliability = 0;
-			
-			possibleResults.put(answer, ++reliability);
-
-			if (reliability > 1) {
-				synchronized (acceptedResults) {
-					TestResult accepted = acceptedResults[questionNo];
-					
-					if (accepted != null) {
-						if (accepted.isMarkedByUser())
-							return;
-						
-						Integer acceptedReliability = possibleResults.get(accepted);
-						if (acceptedReliability != null && acceptedReliability > reliability)
-							return;
-					}
-					
-					acceptedResults[questionNo] = answer;
-				}
-			}
+		resultsFound ++;
+	}
+	
+	public void addAnswer(TestResult answer) {
+		synchronized (acceptedResults) {
+			acceptedResults[answer.getQuestionNo()] = answer;
 		}
 	}
 

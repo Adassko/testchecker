@@ -45,7 +45,14 @@ public final class MathUtils {
     return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
   
-  public static int getMedian(List<Integer> list) {
+  /*public static int getMedian(List<Integer> list) {
+	  if ((list.size() & 1) == 1)
+		  return list.get(list.size() / 2);
+	  else
+		  return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
+  }*/
+
+  public static float getMedian(List<Float> list) {
 	  if ((list.size() & 1) == 1)
 		  return list.get(list.size() / 2);
 	  else

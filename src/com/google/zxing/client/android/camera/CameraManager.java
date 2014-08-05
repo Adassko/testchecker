@@ -122,8 +122,9 @@ public final class CameraManager {
   
   AutoFocusCallback afCallback = new AutoFocusCallback() {
 	@Override
-	public void onAutoFocus(boolean arg0, Camera arg1) {
-		autoFocusing = false;		
+	public void onAutoFocus(boolean success, Camera cam) {
+		autoFocusing = false;
+		if (!success) autoFocus();
 	}
   };
   public synchronized void autoFocus() {

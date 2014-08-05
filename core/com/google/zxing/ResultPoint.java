@@ -34,6 +34,11 @@ public class ResultPoint {
     this.x = x;
     this.y = y;
   }
+  
+  public ResultPoint(float x, float y, int color) {
+	this(x, y);
+  	this.color = color;
+  }
 
   public final float getX() {
     return x;
@@ -146,5 +151,26 @@ public class ResultPoint {
   
   public static double getAtan2(ResultPoint upper, ResultPoint lower) {
 	  return Math.atan2(lower.y -  upper.y, upper.x - lower.x);
+  }
+  
+  public ResultPoint scale(float scaleX, float scaleY) {
+	  return new ResultPoint(this.x * scaleX, this.y * scaleY, this.color);
+  }
+  
+  public ResultPoint add(float x, float y) {
+	  return new ResultPoint(this.x + x, this.y + y, this.color);
+  }
+  
+  public ResultPoint rotate(ResultPoint center, double angle) {
+	  double s = Math.sin(angle);
+	  double c = Math.cos(angle);
+	  
+	  double x = this.x - center.x;
+	  double y = this.y - center.y;
+	  
+	  x = x * c - y * s;
+	  y = x * s + y * c;
+	  
+	  return new ResultPoint((float)x + center.x, (float)y + center.y, this.color);
   }
 }

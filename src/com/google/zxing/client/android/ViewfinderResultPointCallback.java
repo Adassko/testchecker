@@ -31,11 +31,6 @@ final class ViewfinderResultPointCallback implements ResultPointCallback {
   public void foundPossibleResultPoint(ResultPoint point) {
     viewfinderView.addPossibleResultPoint(point);
   }
-  
-  @Override
-  public void foundBadPoint(ResultPoint point) {
-	viewfinderView.addBadResultPoint(point);		
-  }
 
   @Override
   public void foundArea(ResultPoint[] points) {

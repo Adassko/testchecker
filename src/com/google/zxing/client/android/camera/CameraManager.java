@@ -20,9 +20,11 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
+
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.client.android.camera.open.OpenCameraInterface;
 
@@ -116,14 +118,25 @@ public final class CameraManager {
 
   }
 
-  private boolean macro = false;
+  private volatile boolean autoFocusing = false;
+  
+  AutoFocusCallback afCallback = new AutoFocusCallback() {
+	@Override
+	public void onAutoFocus(boolean arg0, Camera arg1) {
+		autoFocusing = false;		
+	}
+  };
   public synchronized void autoFocus() {
+	  if (camera != null && !autoFocusing) {
+		  autoFocusing = true;
+		  camera.autoFocus(afCallback);
+	  }
+  }
+  
+  public synchronized void stopFocus() {
 	  if (camera != null) {
-		  macro ^= true;
-		  Camera.Parameters parameters = camera.getParameters();
-		  parameters.setFocusMode(macro ? Camera.Parameters.FOCUS_MODE_MACRO : Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-		  camera.setParameters(parameters);;
-		  if (macro) camera.autoFocus(null); else camera.cancelAutoFocus();
+		  camera.cancelAutoFocus();
+		  autoFocusing = false;
 	  }
   }
 

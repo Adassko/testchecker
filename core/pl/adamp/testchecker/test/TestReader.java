@@ -1,20 +1,10 @@
 package pl.adamp.testchecker.test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import android.util.Log;
-import android.util.SparseArray;
-import android.util.SparseIntArray;
-
-import com.google.zxing.BarcodeFormat;
+//import android.util.Log;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
 import com.google.zxing.DecodeHintType;
@@ -27,13 +17,11 @@ import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.detector.MathUtils;
-import com.google.zxing.common.detector.MonochromeRectangleDetector;
-import com.google.zxing.common.detector.WhiteRectangleDetector;
 import com.google.zxing.oned.OneDReader;
 
 public class TestReader implements Reader {
 	private static final int MAX_AVG_VARIANCE = 34;
-	private final String TAG = TestReader.class.getName();
+//	private final String TAG = TestReader.class.getName();
 	
 	static final int[][] LOWER_PATTERNS = {
 		{1, 1, 2, 1, 2}, // 0
@@ -112,6 +100,7 @@ public class TestReader implements Reader {
 	};
 	
 	private ResultPointCallback resultPointCallback = null;
+	private TestResultCallback testResultCallback = null;
 	
 	@Override
 	public Result decode(BinaryBitmap image) throws NotFoundException,
@@ -357,7 +346,7 @@ public class TestReader implements Reader {
 					TestRegion region = new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition());
 					
 					int angle = region.getSlopeAngle();
-					Log.d(TAG, "" + angle);
+					//Log.d(TAG, "" + angle);
 					if (angle > 45 && angle < 135) {
 						result.add(region);
 						angles.add(angle);
@@ -380,66 +369,61 @@ public class TestReader implements Reader {
 		}
 		return result;
 	}
-	
-	private class TickBox {
-		boolean isMistake;
-		boolean ticked;
-		int questionId;
-		ResultPoint boxCenter;
 		
-		public TickBox(int questionId, boolean ticked, boolean isMistake, ResultPoint boxCenter) {
-			this.questionId = questionId;
-			this.ticked = ticked;
-			this.isMistake = isMistake;
-			this.boxCenter = boxCenter;
-		}
-
-		public boolean isMistake() {
-			return isMistake;
-		}
-
-		public boolean isTicked() {
-			return ticked;
-		}
-
-		public int getQuestionId() {
-			return questionId;
-		}
-
-		public ResultPoint getBoxCenter() {
-			return boxCenter;
-		}
-	}
-	
 	private boolean isTicked(BitMatrix matrix, ResultPoint center, float range) {
-		return matrix.get((int)center.getX(), (int)center.getY());
+		int cX = (int)center.getX();
+		int cY = (int)center.getY();
+		int r = (int)range;
+		
+		int checked = 0;
+		for (int x = cX - r; x < cX + r; x ++) {
+			if (matrix.get(x, cY)) {
+				checked ++;
+				if (checked > 4) return true;
+			}
+		}
+		for (int y = cY - r; y < cY + r; y ++) {
+			if (y != cY && matrix.get(cX, y)) {
+				checked ++;
+				if (checked > 4) return true;
+			}
+		}
+		return false;
 	}
 	
 	private void detectGivenAnswers(BitMatrix matrix, List<TestRegion> testRegions) {
 		int answersCount = 4;
-		int margin = 5;
+		int margin = 10;
 		int boxHeight = 27;
+		int boxAreaHeight = boxHeight + 2 * 5; // 5px margins
+		float halfBoxAreaHeight = boxAreaHeight / 2;
 		float halfBoxHeight = boxHeight / 2;
 		
 		for (TestRegion region : testRegions) {
-			int totalHeight = answersCount * boxHeight + margin * 2;
+			int totalHeight = answersCount * boxAreaHeight + margin * 2;
+			
+			TestResult result = new TestResult(region.getRegionCode() + 1);
 			
 			for (int i = 0; i < answersCount; i++) {
-				float boxY = margin + i * boxHeight + halfBoxHeight;
+				float boxY = margin + i * boxAreaHeight + halfBoxAreaHeight;
 				float dpp = ResultPoint.distance(region.getUpperPoint(), region.getLowerPoint()) / totalHeight;
 				ResultPoint center = ResultPoint.lerp(region.getUpperPoint(), region.getLowerPoint(), boxY / totalHeight);
-				if (isTicked(matrix, center, halfBoxHeight * dpp))
-					resultPointCallback.foundPossibleResultPoint(center);
-				else
-					resultPointCallback.foundBadPoint(center);
+				
+				if (isTicked(matrix, center, halfBoxHeight * dpp)) {
+					result.addMarkedAnswer(i);
+				}
 			}
+			
+			testResultCallback.foundPossibleAnswer(result);
 		}
 	}
 	
 	@Override
 	public Result decode(BinaryBitmap image, Map<DecodeHintType, ?> hints)
 			throws NotFoundException, ChecksumException, FormatException {
-		
+
+		testResultCallback = hints == null ? null :
+			(TestResultCallback) hints.get(DecodeHintType.NEED_TEST_RESULT_CALLBACK);
 		resultPointCallback = hints == null ? null :
 	        (ResultPointCallback) hints.get(DecodeHintType.NEED_RESULT_POINT_CALLBACK);
 
@@ -461,7 +445,7 @@ public class TestReader implements Reader {
 					testRegions.get(testRegions.size() - 1).getLowerPoint(), testRegions.get(0).getLowerPoint() };
 			resultPointCallback.foundArea(area);
 		}
-		Log.d(TAG, "Pytan: " + testRegions.size());
+		//Log.d(TAG, "Pytan: " + testRegions.size());
 		
 		
 /*		while ((y = column.getNextSet(y)) < height) {

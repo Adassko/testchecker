@@ -29,6 +29,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import pl.adamp.testchecker.test.TestResultCallback;
+
 /**
  * This thread does all the heavy lifting of decoding the images.
  *
@@ -48,7 +50,8 @@ final class DecodeThread extends Thread {
                Collection<BarcodeFormat> decodeFormats,
                Map<DecodeHintType,?> baseHints,
                String characterSet,
-               ResultPointCallback resultPointCallback) {
+               ResultPointCallback resultPointCallback,
+               TestResultCallback testResultCallback) {
 
     this.activity = activity;
     handlerInitLatch = new CountDownLatch(1);
@@ -66,6 +69,7 @@ final class DecodeThread extends Thread {
       hints.put(DecodeHintType.CHARACTER_SET, characterSet);
     }
     hints.put(DecodeHintType.NEED_RESULT_POINT_CALLBACK, resultPointCallback);
+    hints.put(DecodeHintType.NEED_TEST_RESULT_CALLBACK, testResultCallback);
     Log.i("DecodeThread", "Hints: " + hints);
   }
 

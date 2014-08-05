@@ -28,6 +28,7 @@ public class ResultPoint {
 
   private final float x;
   private final float y;
+  private int color;
 
   public ResultPoint(float x, float y) {
     this.x = x;
@@ -40,6 +41,14 @@ public class ResultPoint {
 
   public final float getY() {
     return y;
+  }
+  
+  public final void setColor(int color) {
+	  this.color = color;
+  }
+  
+  public final int getColor() {
+	  return this.color;
   }
   
   @Override

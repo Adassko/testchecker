@@ -18,6 +18,8 @@ package com.google.zxing;
 
 import java.util.List;
 
+import pl.adamp.testchecker.test.TestResultCallback;
+
 /**
  * Encapsulates a type of hint that a caller may pass to a barcode reader to help it
  * more quickly or accurately decode it. It is up to implementations to decide what,
@@ -88,7 +90,7 @@ public enum DecodeHintType {
    */
   NEED_RESULT_POINT_CALLBACK(ResultPointCallback.class),
   
-  NEED_TEST_AREA(ResultPointCallback.class)
+  NEED_TEST_RESULT_CALLBACK(TestResultCallback.class)
 
   // End of enumeration values.
   ;

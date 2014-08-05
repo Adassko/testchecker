@@ -75,11 +75,11 @@ final class DecodeHandler extends Handler {
    */
   private void decode(byte[] data, int width, int height) {
     long start = System.currentTimeMillis();
-    if (last != 0)
+    /*if (last != 0)
     {
     	Log.d(TAG, "Next frame in " + (start - last) + " ms");
     }
-	last = start;
+	last = start;*/
     Result rawResult = null;
     PlanarYUVLuminanceSource source = activity.getCameraManager().buildLuminanceSource(data, width, height);
     if (source != null) {

@@ -15,9 +15,9 @@
  limitations under the License.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.google.zxing.client.android"
-          android:versionName="4.5.1"
-          android:versionCode="94"
+          package="pl.adamp.testchecker.client"
+          android:versionName="1.0.0"
+          android:versionCode="100"
           android:installLocation="auto">
 
   <uses-permission android:name="android.permission.CAMERA"/>
@@ -62,46 +62,16 @@
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
-      <intent-filter>
-        <action android:name="com.google.zxing.client.android.SCAN"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
     </activity>
     <activity android:name=".PreferencesActivity"
               android:label="@string/preferences_name"
               android:stateNotNeeded="true">
-    </activity>
-    <activity android:name=".book.SearchBookContentsActivity"
-              android:label="@string/sbc_name"
-              android:stateNotNeeded="true"
-              android:screenOrientation="landscape"
-              android:configChanges="orientation|keyboardHidden">
-      <intent-filter>
-        <action android:name="com.google.zxing.client.android.SEARCH_BOOK_CONTENTS"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-    </activity>
-    <activity android:name=".share.ShareActivity"
-              android:stateNotNeeded="true"
-              android:screenOrientation="user">
-      <intent-filter>
-        <action android:name="com.google.zxing.client.android.SHARE"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
     </activity>
     <activity android:name=".history.HistoryActivity"
               android:label="@string/history_title"
               android:stateNotNeeded="true">
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-    </activity>
-    <activity android:name=".share.BookmarkPickerActivity"
-              android:label="@string/bookmark_picker_name"
-              android:stateNotNeeded="true">
-      <intent-filter>
-        <action android:name="android.intent.action.PICK"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
@@ -122,5 +92,4 @@
       </intent-filter>
     </activity>
   </application>
-
 </manifest>

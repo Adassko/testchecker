@@ -16,8 +16,8 @@
 
 package com.google.zxing.client.android.camera;
 
+import pl.adamp.testchecker.client.PreferencesActivity;
 import android.content.SharedPreferences;
-import com.google.zxing.client.android.PreferencesActivity;
 
 /**
  * Enumerates settings of the prefernce controlling the front light.

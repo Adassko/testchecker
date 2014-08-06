@@ -20,7 +20,7 @@
                android:layout_width="fill_parent"
                android:layout_height="fill_parent"/>
 
-  <com.google.zxing.client.android.ViewfinderView
+  <pl.adamp.testchecker.client.ViewfinderView
       android:id="@+id/viewfinder_view"
       android:layout_width="fill_parent"
       android:layout_height="fill_parent"/>

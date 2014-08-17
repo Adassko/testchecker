@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <string name="db_schema">
+CREATE TABLE QuestionCategories (
+    Id INTEGER PRIMARY KEY,
+    Name TEXT
+);
+
+CREATE TABLE Tests (
+    Id INTEGER PRIMARY KEY,
+    Name TEXT,
+    ShuffleQuestions INTEGER(1),
+    ShuffleAnswers INTEGER(1),
+    QuestionsCount INTEGER,
+    ModifyDate INTEGER(4)
+);
+CREATE INDEX id_tests_createdate ON Tests (ModifyDate DESC);
+
+CREATE TABLE Questions (
+    Id INTEGER PRIMARY KEY,
+    Text TEXT,
+    DefaultValue INTEGER,
+    QuestionCategoryId INTEGER,
+    
+    FOREIGN KEY (QuestionCategoryId) REFERENCES QuestionCategories(Id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE Answers (
+    Id INTEGER PRIMARY KEY,
+    Text TEXT,
+    IsCorrect INTEGER(1),
+    QuestionId INTEGER,
+    
+    FOREIGN KEY (QuestionId) REFERENCES Questions(Id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE TestQuestions (
+    TestId INTEGER,
+    QuestionId INTEGER,
+    Value INTEGER,
+    Ordinal INTEGER(4),
+    
+    PRIMARY KEY (TestId, QuestionId),    
+    FOREIGN KEY (TestId) REFERENCES Tests(Id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (QuestionId) REFERENCES Questions(Id) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+CREATE INDEX id_testquestions_ordinal ON TestQuestions (Ordinal ASC);
+
+CREATE TABLE StudentsGroups (
+    Id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Semester INTEGER,
+    Year INTEGER
+);
+
+CREATE TABLE Students (
+    Id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Description TEXT,
+    Email TEXT,
+    Telephone TEXT,
+    StudentGroupId INTEGER,
+    
+    FOREIGN KEY (StudentGroupId) REFERENCES StudentGroups(Id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE TestResults (
+    Id INTEGER PRIMARY KEY,
+    TestId INTEGER,
+    StudentId INTEGER,
+    Date INTEGER,
+    Points INTEGER,
+    CorrectAnswers INTEGER,
+    IncorrectAnswers INTEGER,
+    Grade TEXT,
+    
+    FOREIGN KEY (TestId) REFERENCES Tests(Id) ON UPDATE CASCADE ON DELETE SET NULL,
+    FOREIGN KEY (StudentId) REFERENCES Students(Id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE TestQuestionAnswers (
+    TestResultId INTEGER,
+    QuestionId INTEGER,
+    Answers INTEGER,
+    Points INTEGER,
+    
+    PRIMARY KEY (TestResultId, QuestionId),
+    FOREIGN KEY (TestResultId) REFERENCES TestResults(Id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (QuestionId) REFERENCES Questions(Id) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE Grading (
+    MinScore INTEGER PRIMARY KEY,
+    Grade TEXT
+);
+    </string>    
+</resources>

@@ -1,22 +1,40 @@
 # view res/layout/search_book_contents_list_item.xml #generated:17
 -keep class com.google.zxing.client.android.book.SearchBookContentsListItem { <init>(...); }
 
-# view AndroidManifest.xml #generated:54
+# view AndroidManifest.xml #generated:66
 -keep class pl.adamp.testchecker.client.CaptureActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:87
+# view AndroidManifest.xml #generated:122
+-keep class pl.adamp.testchecker.client.CreateTestActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:101
 -keep class pl.adamp.testchecker.client.HelpActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:66
+# view AndroidManifest.xml #generated:110
+-keep class pl.adamp.testchecker.client.MainActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:86
 -keep class pl.adamp.testchecker.client.PreferencesActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:135
+-keep class pl.adamp.testchecker.client.QuestionEditActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:131
+-keep class pl.adamp.testchecker.client.TestResultsActivity { <init>(...); }
 
 # view ldpi\res/layout-ldpi/capture.xml #generated:23
 # view res/layout/capture.xml #generated:23
 -keep class pl.adamp.testchecker.client.ViewfinderView { <init>(...); }
 
-# view AndroidManifest.xml #generated:70
+# view AndroidManifest.xml #generated:91
 -keep class pl.adamp.testchecker.client.history.HistoryActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:78
--keep class pl.adamp.testchecker.client.share.AppPickerActivity { <init>(...); }
+# onClick res/layout/activity_main.xml #generated:56
+-keepclassmembers class * { *** captureClick(...); }
+
+# onClick res/layout/activity_main.xml #generated:34
+-keepclassmembers class * { *** createTest(...); }
+
+# onClick res/layout/activity_main.xml #generated:45
+-keepclassmembers class * { *** viewResults(...); }
 

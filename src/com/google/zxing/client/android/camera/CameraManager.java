@@ -27,6 +27,7 @@ import android.view.SurfaceHolder;
 
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.client.android.camera.open.OpenCameraInterface;
+import com.google.zxing.common.detector.MathUtils;
 
 import java.io.IOException;
 
@@ -120,16 +121,21 @@ public final class CameraManager {
 
   private volatile boolean autoFocusing = false;
   
+  public boolean isAutoFocusing() {
+	  return autoFocusing;
+  }
+  
   AutoFocusCallback afCallback = new AutoFocusCallback() {
 	@Override
 	public void onAutoFocus(boolean success, Camera cam) {
+		Log.d(TAG, "Autofocus " + (success ? "successed" : "failed"));
 		autoFocusing = false;
-		if (!success) autoFocus();
 	}
   };
   public synchronized void autoFocus() {
 	  if (camera != null && !autoFocusing) {
 		  autoFocusing = true;
+		  Log.d(TAG, "Autofocus start");
 		  camera.autoFocus(afCallback);
 	  }
   }
@@ -137,6 +143,7 @@ public final class CameraManager {
   public synchronized void stopFocus() {
 	  if (camera != null) {
 		  camera.cancelAutoFocus();
+		  Log.d(TAG, "Autofocus cancelled");
 		  autoFocusing = false;
 	  }
   }
@@ -237,8 +244,8 @@ public final class CameraManager {
         return null;
       }
 
-      int width = findDesiredDimensionInRange(screenResolution.x, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
-      int height = findDesiredDimensionInRange(screenResolution.y, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
+      int width = MathUtils.clamp(screenResolution.x * 8/9, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
+      int height = MathUtils.clamp(screenResolution.y * 6/9, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
 
       int leftOffset = (screenResolution.x - width) / 2;
       int topOffset = (screenResolution.y - height) / 2;
@@ -248,17 +255,6 @@ public final class CameraManager {
     return framingRect;
   }
   
-  private static int findDesiredDimensionInRange(int resolution, int hardMin, int hardMax) {
-    int dim = 5 * resolution / 8; // Target 5/8 of each dimension
-    if (dim < hardMin) {
-      return hardMin;
-    }
-    if (dim > hardMax) {
-      return hardMax;
-    }
-    return dim;
-  }
-
   /**
    * Like {@link #getFramingRect} but coordinates are in terms of the preview frame,
    * not UI / screen.

@@ -24,7 +24,7 @@ import java.util.Map;
  *
  * @author Sean Owen
  */
-public final class Result {
+public class Result {
 
   private final String text;
   private final byte[] rawBytes;

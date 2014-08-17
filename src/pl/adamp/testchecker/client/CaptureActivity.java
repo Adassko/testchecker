@@ -24,6 +24,7 @@ import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -68,6 +69,9 @@ import pl.adamp.testchecker.client.result.ResultButtonListener;
 import pl.adamp.testchecker.client.result.ResultHandler;
 import pl.adamp.testchecker.client.result.ResultHandlerFactory;
 import pl.adamp.testchecker.client.share.ShareActivity;
+import pl.adamp.testchecker.client.test.TestEvaluator;
+import pl.adamp.testchecker.test.TestDecoderResult;
+import pl.adamp.testchecker.test.entities.TestSheet;
 
 /**
  * This activity opens the camera and does the actual scanning on a background
@@ -81,6 +85,8 @@ import pl.adamp.testchecker.client.share.ShareActivity;
 public final class CaptureActivity extends Activity implements
 		SurfaceHolder.Callback {
 
+	private TestSheet currentTestSheet = null;
+	
 	private static final String TAG = CaptureActivity.class.getSimpleName();
 
 	private static final long BULK_MODE_SCAN_DELAY_MS = 1000L;
@@ -107,6 +113,10 @@ public final class CaptureActivity extends Activity implements
 	private InactivityTimer inactivityTimer;
 	private BeepManager beepManager;
 
+	TestSheet getCurrentTestSheet() {
+		return currentTestSheet;
+	}
+	
 	ViewfinderView getViewfinderView() {
 		return viewfinderView;
 	}
@@ -126,6 +136,9 @@ public final class CaptureActivity extends Activity implements
 		Window window = getWindow();
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.capture);
+		
+		ActionBar actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(true);
 
 		hasSurface = false;
 		historyManager = new HistoryManager(this);
@@ -134,6 +147,8 @@ public final class CaptureActivity extends Activity implements
 		beepManager = new BeepManager(this);
 
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+		
+		currentTestSheet = TestSheet.getSampleInstance();
 	}
 
 	@Override
@@ -194,6 +209,9 @@ public final class CaptureActivity extends Activity implements
 			SurfaceHolder surfaceHolder = surfaceView.getHolder();
 			surfaceHolder.removeCallback(this);
 		}
+		if (toast != null)
+			toast.cancel();
+
 		super.onPause();
 	}
 
@@ -203,12 +221,32 @@ public final class CaptureActivity extends Activity implements
 		super.onDestroy();
 	}
 
+	long lastBackPress;
+	@Override
+	public void onBackPressed() {
+		long currentTime = System.currentTimeMillis();
+		if (lastBackPress > currentTime - 500) { // podwójne przyciœniêcie przycisku WSTECZ
+			super.onBackPressed();
+		} else {
+			restartPreviewAfterDelay(0L);
+			lastBackPress = currentTime;
+			showToast(R.string.press_back_twice);
+		}
+	}
+	
+	private Toast toast;
+	
+	private void showToast(int textResId) {
+		if (toast != null) {
+			toast.cancel();
+		}
+		toast = Toast.makeText(this, textResId, Toast.LENGTH_SHORT);
+		toast.show();
+	}
+	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		switch (keyCode) {
-		case KeyEvent.KEYCODE_BACK:
-			restartPreviewAfterDelay(0L);
-			return true;
 		case KeyEvent.KEYCODE_FOCUS:
 			cameraManager.autoFocus();
 			return true;
@@ -324,6 +362,15 @@ public final class CaptureActivity extends Activity implements
 	 */
 	public void handleDecode(Result rawResult, Bitmap barcode, float scaleFactor) {
 		inactivityTimer.onActivity();
+		
+		Log.d(TAG, "Got result: " + rawResult.getClass().getName());
+		
+		if (rawResult instanceof TestDecoderResult) {
+			TestDecoderResult result = (TestDecoderResult)rawResult;
+			
+			TestEvaluator.getTestResults(getCurrentTestSheet(), result.getAnswers());
+		}
+		
 		ResultHandler resultHandler = ResultHandlerFactory.makeResultHandler(
 				this, rawResult);
 
@@ -480,7 +527,8 @@ public final class CaptureActivity extends Activity implements
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_UP) {
-			cameraManager.autoFocus();
+			currentTestSheet = TestSheet.getSampleInstance();
+			viewfinderView.clearView();
 		}
 
 		return super.onTouchEvent(event);
@@ -536,6 +584,7 @@ public final class CaptureActivity extends Activity implements
 		statusView.setText(R.string.msg_default_status);
 		statusView.setVisibility(View.VISIBLE);
 		viewfinderView.setVisibility(View.VISIBLE);
+		viewfinderView.clearView();
 	}
 
 	public void drawViewfinder() {

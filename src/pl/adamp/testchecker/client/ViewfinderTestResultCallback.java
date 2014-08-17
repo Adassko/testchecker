@@ -16,30 +16,39 @@ d * Copyright (C) 2009 ZXing authors
 
 package pl.adamp.testchecker.client;
 
-import java.util.List;
-
-import pl.adamp.testchecker.test.TestResult;
+import pl.adamp.testchecker.test.TestArea;
 import pl.adamp.testchecker.test.TestResultCallback;
-import pl.adamp.testchecker.test.TestResultMarker;
-
-import com.google.zxing.ResultPoint;
-import com.google.zxing.ResultPointCallback;
+import pl.adamp.testchecker.test.entities.AnswerSheet;
+import pl.adamp.testchecker.test.entities.QuestionAnswers;
+import pl.adamp.testchecker.test.entities.TestSheet;
 
 final class ViewfinderTestResultCallback implements TestResultCallback {
 
 	private final ViewfinderView viewfinderView;
+	private final CaptureActivity activity;
 
-	ViewfinderTestResultCallback(ViewfinderView viewfinderView) {
+	ViewfinderTestResultCallback(ViewfinderView viewfinderView, CaptureActivity activity) {
 		this.viewfinderView = viewfinderView;
+		this.activity = activity;
 	}
 
 	@Override
-	public void foundPossibleAnswer(TestResult answer) {
+	public void foundPossibleAnswer(QuestionAnswers answer) {
 		viewfinderView.addPossibleAnswer(answer);
 	}
-	
+
 	@Override
-	public void foundAnswer(TestResult answer) {
-		viewfinderView.addAnswer(answer);
+	public TestSheet getTestSheet() {
+		return activity.getCurrentTestSheet();
+	}
+
+	@Override
+	public AnswerSheet getAnswerSheet() {
+		return viewfinderView.getAnswerSheet();
+	}
+
+	@Override
+	public void foundArea(TestArea area) {
+		viewfinderView.addArea(area);	
 	}
 }

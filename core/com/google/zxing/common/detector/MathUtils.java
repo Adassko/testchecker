@@ -22,40 +22,44 @@ import com.google.zxing.ResultPoint;
 
 public final class MathUtils {
 
-  private MathUtils() {
-  }
+	private MathUtils() {
+	}
 
-  /**
-   * Ends up being a bit faster than {@link Math#round(float)}. This merely rounds its
-   * argument to the nearest int, where x.5 rounds up to x+1.
-   */
-  public static int round(float d) {
-    return (int) (d + 0.5f);
-  }
+	/**
+	 * Ends up being a bit faster than {@link Math#round(float)}. This merely rounds its
+	 * argument to the nearest int, where x.5 rounds up to x+1.
+	 */
+	public static int round(float d) {
+		return (int) (d + 0.5f);
+	}
 
-  public static float distance(float aX, float aY, float bX, float bY) {
-    float xDiff = aX - bX;
-    float yDiff = aY - bY;
-    return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-  }
+	public static float distance(float aX, float aY, float bX, float bY) {
+		float xDiff = aX - bX;
+		float yDiff = aY - bY;
+		return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+	}
 
-  public static float distance(int aX, int aY, int bX, int bY) {
-    int xDiff = aX - bX;
-    int yDiff = aY - bY;
-    return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-  }
-  
-  /*public static int getMedian(List<Integer> list) {
+	public static float distance(int aX, int aY, int bX, int bY) {
+		int xDiff = aX - bX;
+		int yDiff = aY - bY;
+		return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+	}
+
+	/*public static int getMedian(List<Integer> list) {
 	  if ((list.size() & 1) == 1)
 		  return list.get(list.size() / 2);
 	  else
 		  return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
   }*/
 
-  public static float getMedian(List<Float> list) {
-	  if ((list.size() & 1) == 1)
-		  return list.get(list.size() / 2);
-	  else
-		  return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
-  }
+	public static float getMedian(List<Float> list) {
+		if ((list.size() & 1) == 1)
+			return list.get(list.size() / 2);
+		else
+			return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
+	}
+
+	public static int clamp(int i, int min, int max) {
+		return Math.max(Math.min(i, max), min);
+	}
 }

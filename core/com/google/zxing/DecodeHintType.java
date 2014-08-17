@@ -90,7 +90,9 @@ public enum DecodeHintType {
    */
   NEED_RESULT_POINT_CALLBACK(ResultPointCallback.class),
   
-  NEED_TEST_RESULT_CALLBACK(TestResultCallback.class)
+  NEED_TEST_RESULT_CALLBACK(TestResultCallback.class),
+  
+  TEST_FLAG(Void.class)
 
   // End of enumeration values.
   ;

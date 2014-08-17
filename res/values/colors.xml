@@ -13,17 +13,28 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- -->
-<resources>
-  <color name="contents_text">#ff000000</color>
-  <color name="encode_view">#ffffffff</color>
-  <color name="possible_result_points">#c0ffbd21</color> <!-- Android standard ICS color -->
-  <color name="result_minor_text">#ffc0c0c0</color>
-  <color name="result_points">#c099cc00</color> <!-- Android standard ICS color -->
-  <color name="result_text">#ffffffff</color>
-  <color name="result_view">#b0000000</color>
-  <color name="status_text">#ffffffff</color>
-  <color name="transparent">#00000000</color>
-  <color name="viewfinder_laser">#ffcc0000</color> <!-- Android standard ICS color -->
-  <color name="viewfinder_mask">#60000033</color>
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <color name="contents_text">#ff000000</color>
+    <color name="encode_view">#ffffffff</color>
+    <color name="possible_result_points">#c0ffbd21</color>
+ <!-- Android standard ICS color -->
+    <color name="result_minor_text">#ffc0c0c0</color>
+    <color name="result_points">#c099cc00</color>
+ <!-- Android standard ICS color -->
+    <color name="result_text">#ffffffff</color>
+    <color name="result_view">#b0000000</color>
+    <color name="status_text">#ffffffff</color>
+    <color name="transparent">#00000000</color>
+    <color name="viewfinder_laser">#8040ff00</color>
+ <!-- Android standard ICS color -->
+    <color name="viewfinder_laser_end">#00108000</color>
+    <color name="viewfinder_mask">#a0303033</color>
+    <color name="answersheet_background">#70f0f0f0</color>
+    <color name="answersheet_text">#70000030</color>
+    <color name="answersheet_correct">#7000f000</color>
+    <color name="answersheet_incorrect">#70f00000</color>
+    <color name="black_overlay">#66000000</color>
+
 </resources>

@@ -153,13 +153,6 @@ public final class HistoryManager {
   }
 
   public void addHistoryItem(Result result, ResultHandler handler) {
-    // Do not save this item to the history if the preference is turned off, or the contents are
-    // considered secure.
-    if (!activity.getIntent().getBooleanExtra(Intents.Scan.SAVE_HISTORY, true) ||
-        handler.areContentsSecure()) {
-      return;
-    }
-
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
     if (!prefs.getBoolean(PreferencesActivity.KEY_REMEMBER_DUPLICATES, false)) {
       deletePrevious(result.getText());

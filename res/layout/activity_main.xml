@@ -1,0 +1,79 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    tools:context="pl.adamp.testchecker.client.MainActivity" >
+
+    <TextView
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:text="@string/dummy_content"
+        android:textColor="#33b5e5"
+        android:textSize="50sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center"
+        android:scaleType="centerCrop"
+        android:src="@drawable/hand" />
+
+    <RelativeLayout
+        android:layout_width="149dp"
+        android:layout_height="match_parent"
+        android:background="#40000000"
+        android:gravity="center"
+        android:padding="5dp">
+
+        <Button
+            android:id="@+id/button_create_test"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/button_scan"
+            android:onClick="createTest"
+            android:text="@string/button_create_test" />
+
+        <Button
+            android:id="@+id/button_view_results"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/button_create_test"
+            android:onClick="viewResults"
+            android:text="@string/button_view_results" />
+
+        <Button
+            android:id="@+id/button_scan"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:onClick="captureClick"
+            android:text="@string/button_scan" />
+
+        <Button
+            android:id="@+id/button_settings"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/button_view_results"
+            android:text="@string/button_settings" />
+
+    </RelativeLayout>
+
+</FrameLayout>

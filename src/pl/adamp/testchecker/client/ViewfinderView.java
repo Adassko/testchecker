@@ -24,18 +24,26 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
+import android.graphics.Shader.TileMode;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import pl.adamp.testchecker.client.common.Colors;
+import pl.adamp.testchecker.client.test.TestEvaluator;
+import pl.adamp.testchecker.test.TestArea;
 import pl.adamp.testchecker.test.TestReader;
-import pl.adamp.testchecker.test.TestResult;
+import pl.adamp.testchecker.test.TestRow;
+import pl.adamp.testchecker.test.entities.AnswerSheet;
+import pl.adamp.testchecker.test.entities.QuestionAnswers;
 
 /**
  * This view is overlaid on top of the camera preview. It adds the viewfinder rectangle and partial
@@ -46,8 +54,7 @@ import pl.adamp.testchecker.test.TestResult;
 public final class ViewfinderView extends View {
 	private static final String TAG = ViewfinderView.class.getSimpleName();
 
-	private static final int[] SCANNER_ALPHA = {0, 64, 128, 192, 255, 192, 128, 64};
-	private static final long ANIMATION_DELAY = 80L;
+	private static final long ANIMATION_DELAY = 30L;
 	private static final int CURRENT_POINT_OPACITY = 0xA0;
 	private static final int MAX_RESULT_POINTS = 100; // 20;
 	private static final int POINT_SIZE = 6;
@@ -55,40 +62,39 @@ public final class ViewfinderView extends View {
 	private CameraManager cameraManager;
 	private final Paint paint;
 	private Bitmap resultBitmap;
-	private final int maskColor;
-	private final int resultColor;
-	private final int laserColor;
-	private final int resultPointColor;
-	private int scannerAlpha;
+	private float scannerPosition = 0;
+	private boolean scannerGoRight = true; 
 	private List<ResultPoint> possibleResultPoints;
 	private List<ResultPoint> lastPossibleResultPoints;
-	private TestResult[] acceptedResults;
+	private AnswerSheet answerSheet;
 	private Paint areaPaint;
-	private ResultPoint[] areaPoints;
-	private int areaPointsValid = 0;
-	private volatile int resultsFound = 0; 
+	private TestArea testArea;
+	private int testAreaValidTime;
+	private volatile int foundAnswersPerFrame = 0;
+	private final Paint laserPaint;
 
 	// This constructor is used when the class is built from an XML resource.
 	public ViewfinderView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		
+		Colors.init(this);
 
 		// Initialize these once for performance rather than calling them every time in onDraw().
 		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		Resources resources = getResources();
-		maskColor = resources.getColor(R.color.viewfinder_mask);
-		resultColor = resources.getColor(R.color.result_view);
-		laserColor = resources.getColor(R.color.viewfinder_laser);
-		resultPointColor = resources.getColor(R.color.possible_result_points);
-		scannerAlpha = 0;
-		possibleResultPoints = new ArrayList<ResultPoint>(5);
-		acceptedResults = new TestResult[TestReader.MAX_ANSWERS_COUNT];
-
-		lastPossibleResultPoints = null;
-		areaPoints = null;
+		
 		areaPaint = new Paint();
 		areaPaint.setColor(Color.BLUE);
 		areaPaint.setAlpha(60);
 		areaPaint.setStyle(Style.FILL);
+		
+		LinearGradient gradient = new LinearGradient(0, 0, 25, 0, Colors.viewfinder_laser, Colors.viewfinder_laser_end,
+				TileMode.REPEAT);
+		laserPaint = new Paint();
+		laserPaint.setDither(true);
+		laserPaint.setShader(gradient);
+		
+		clearView();
 	}
 
 	public void setCameraManager(CameraManager cameraManager) {
@@ -96,31 +102,45 @@ public final class ViewfinderView extends View {
 	}
 
 	long lastTimeFound = System.currentTimeMillis();
+	long lastTime = System.currentTimeMillis();
 	
 	@Override
 	public void onDraw(Canvas canvas) {
+		long currentTime = System.currentTimeMillis();
+		long timeDelta = currentTime - lastTime; // for animation purposes
+		if (timeDelta > 200) timeDelta = 200;
+		lastTime = currentTime;
+		
+		int width = canvas.getWidth();
+		int height = canvas.getHeight();
+
 		if (cameraManager == null) {
-			return; // not ready yet, early draw before done configuring
+			// designer time draw
+			paint.setColor(Colors.maskColor);
+			canvas.drawRect(0, 0, width, height * 0.2f, paint);
+			canvas.drawRect(0, height * 0.2f, width * 0.2f, height * 0.8f, paint);
+			canvas.drawRect(width * 0.8f, height * 0.2f, width, height * 0.8f, paint);
+			canvas.drawRect(0, height * 0.8f, width, height, paint);
+			return;
 		}
-		if (resultsFound > 2) {
-			lastTimeFound = System.currentTimeMillis();
-			cameraManager.stopFocus();
+		
+		if (foundAnswersPerFrame >= 2) {
+			lastTimeFound = currentTime;
 		} else {
-			if (lastTimeFound < System.currentTimeMillis() - 2000) {
+			if (lastTimeFound < currentTime - 2000) {
 				cameraManager.autoFocus();
+				lastTimeFound = currentTime - 1000;
 			}
 		}
-		resultsFound = 0;
+		foundAnswersPerFrame = 0;
 		Rect frame = cameraManager.getFramingRect();
 		Rect previewFrame = cameraManager.getFramingRectInPreview();    
 		if (frame == null || previewFrame == null) {
 			return;
 		}
-		int width = canvas.getWidth();
-		int height = canvas.getHeight();
 
 		// Draw the exterior (i.e. outside the framing rect) darkened
-		paint.setColor(resultBitmap != null ? resultColor : maskColor);
+		paint.setColor(resultBitmap != null ? Colors.resultColor : Colors.maskColor);
 		canvas.drawRect(0, 0, width, frame.top, paint);
 		canvas.drawRect(0, frame.top, frame.left, frame.bottom + 1, paint);
 		canvas.drawRect(frame.right + 1, frame.top, width, frame.bottom + 1, paint);
@@ -132,14 +152,6 @@ public final class ViewfinderView extends View {
 			canvas.drawBitmap(resultBitmap, null, frame, paint);
 		} else {
 
-			// Draw a red "laser scanner" line through the middle to show decoding is active
-			paint.setColor(laserColor);
-			paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
-
-			scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
-			int middle = frame.height() / 2 + frame.top;
-			canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
-
 			float scaleX = frame.width() / (float) previewFrame.width();
 			float scaleY = frame.height() / (float) previewFrame.height();
 
@@ -148,30 +160,16 @@ public final class ViewfinderView extends View {
 			int frameLeft = frame.left;
 			int frameTop = frame.top;
 
-			synchronized (acceptedResults) {
-				for (TestResult result : acceptedResults) {
-					if (result == null) continue;
-
-					float x = result.getQuestionNo() * 20;
-					for (int i = 0; i < 4; i ++) {
-						if (result.isMarkedAnswer(i)) {
-							float y = frame.bottom - 100 + i * 20;
-							canvas.drawRect(x, y, x + 15, y + 15, paint);
-						}
-					}
-				}
-			}
-
-			if (areaPoints != null) {
+			if (testArea != null) {
 				Path path = new Path();
-				path.moveTo(areaPoints[0].getX() * scaleX + frameLeft, areaPoints[0].getY() * scaleY + frameTop);
-				path.lineTo(areaPoints[1].getX() * scaleX + frameLeft, areaPoints[1].getY() * scaleY + frameTop);
-				path.lineTo(areaPoints[2].getX() * scaleX + frameLeft, areaPoints[2].getY() * scaleY + frameTop);
-				path.lineTo(areaPoints[3].getX() * scaleX + frameLeft, areaPoints[3].getY() * scaleY + frameTop);
+				areaPaint.setAlpha(12 * testAreaValidTime);
+				path.moveTo(testArea.getUpperLeft().getX() * scaleX + frameLeft, testArea.getUpperLeft().getY() * scaleY + frameTop);
+				path.lineTo(testArea.getUpperRight().getX() * scaleX + frameLeft, testArea.getUpperRight().getY() * scaleY + frameTop);
+				path.lineTo(testArea.getBottomRight().getX() * scaleX + frameLeft, testArea.getBottomRight().getY() * scaleY + frameTop);
+				path.lineTo(testArea.getBottomLeft().getX() * scaleX + frameLeft, testArea.getBottomLeft().getY() * scaleY + frameTop);
 				path.close();
 				canvas.drawPath(path, areaPaint);
-				areaPointsValid --;
-				if (areaPointsValid < 0) areaPoints = null;
+				if (--testAreaValidTime <= 0) testArea = null;
 			}
 
 			if (currentPossible.isEmpty()) {
@@ -180,9 +178,10 @@ public final class ViewfinderView extends View {
 				possibleResultPoints = new ArrayList<ResultPoint>(5);
 				lastPossibleResultPoints = currentPossible;
 				paint.setAlpha(CURRENT_POINT_OPACITY);
-				paint.setColor(resultPointColor);
 				synchronized (currentPossible) {
 					for (ResultPoint point : currentPossible) {
+						int pointColor = point.getColor();
+						paint.setColor(pointColor == 0 ? Colors.resultPointColor : pointColor);
 						canvas.drawCircle(frameLeft + (int) (point.getX() * scaleX),
 								frameTop + (int) (point.getY() * scaleY),
 								POINT_SIZE, paint);
@@ -192,16 +191,59 @@ public final class ViewfinderView extends View {
 			
 			if (currentLast != null) {
 				paint.setAlpha(CURRENT_POINT_OPACITY / 2);
-				paint.setColor(resultPointColor);
 				synchronized (currentLast) {
 					float radius = POINT_SIZE / 2.0f;
 					for (ResultPoint point : currentLast) {
+						int pointColor = point.getColor();
+						paint.setColor(pointColor == 0 ? Colors.resultPointColor : pointColor);
 						canvas.drawCircle(frameLeft + (int) (point.getX() * scaleX),
 								frameTop + (int) (point.getY() * scaleY),
 								radius, paint);
 					}
 				}
 			}
+			
+			// Draw a "laser scanner" line through the middle to show decoding is active
+			if (!scannerGoRight)
+				timeDelta = -timeDelta;
+			scannerPosition += timeDelta * 0.4; // pixels per millisecond
+			if (scannerPosition > frame.width()) {
+				scannerPosition = frame.width() * 2 - scannerPosition;
+				scannerGoRight = false;
+			} else if (scannerPosition < 0) {
+				scannerPosition = -scannerPosition;
+				scannerGoRight = true;
+			}
+						
+			canvas.drawRect(frame.left + scannerPosition - 12, frame.top + 1, frame.left + scannerPosition + 12, frame.bottom - 1, laserPaint);
+
+			paint.setColor(Colors.answersheet_background);
+			canvas.drawRect(5, height - 120, width - 5, height - 5, paint);
+			
+			paint.setTextSize(20);
+			for (QuestionAnswers result : answerSheet.getAcceptedAnswers()) {
+				if (result.isMetadata()) continue;
+				TestRow testRow = result.getTestRow();
+				int rowId = result.getTestRowId();
+				float x = rowId * 20 + 10;
+				
+				paint.setColor(Colors.answersheet_text);
+				canvas.drawText((rowId + 1) + "", x + 2, height - 105, paint);
+
+				paint.setColor(TestEvaluator.isAnswerCorrect(result)
+						? Colors.answersheet_correct
+						: Colors.answersheet_incorrect);
+
+				paint.setAlpha(result.isTrustworthy() ? 0x80 : 0x30);
+				for (int i = 0; i < testRow.getAnswersCount(); i ++) {
+					paint.setStyle(result.isMarkedAnswer(i)
+						? Paint.Style.FILL
+						: Paint.Style.STROKE);
+					float y = height - 95 + i * 20;
+					canvas.drawRect(x, y, x + 15, y + 15, paint);
+				}
+			}
+			paint.setStyle(Paint.Style.FILL);
 			
 			// Request another update at the animation interval, but only repaint the laser line,
 			// not the entire viewfinder mask.
@@ -232,22 +274,15 @@ public final class ViewfinderView extends View {
 		invalidate();
 	}
 
-	public void addPossibleAnswer(TestResult answer) {
-		resultsFound ++;
+	public void addPossibleAnswer(QuestionAnswers answer) {
+		foundAnswersPerFrame ++;
+		if (foundAnswersPerFrame == 2)
+			cameraManager.stopFocus();
 	}
 	
-	public void addAnswer(TestResult answer) {
-		synchronized (acceptedResults) {
-			acceptedResults[answer.getQuestionNo()] = answer;
-		}
-	}
-
-	public void addArea(ResultPoint[] points) {
-		areaPoints = null;
-		if (points.length == 4) {
-			areaPoints = points;
-			areaPointsValid = 4;
-		}
+	public void addArea(TestArea area) {
+		testArea = area;
+		testAreaValidTime = 6;
 	}
 
 	public void addPossibleResultPoint(ResultPoint point) {
@@ -262,4 +297,15 @@ public final class ViewfinderView extends View {
 		}
 	}
 
+	public void clearView() {
+		possibleResultPoints = new ArrayList<ResultPoint>(5);
+		answerSheet = new AnswerSheet();
+		lastPossibleResultPoints = null;
+		testArea = null;
+	}
+	
+
+	public AnswerSheet getAnswerSheet() {
+		return this.answerSheet;
+	}
 }

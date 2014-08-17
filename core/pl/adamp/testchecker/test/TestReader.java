@@ -11,7 +11,23 @@ import java.util.Map;
 
 
 
+
+
+
+
+
+import pl.adamp.testchecker.test.entities.AnswerSheet;
+import pl.adamp.testchecker.test.entities.QuestionAnswers;
+import pl.adamp.testchecker.test.entities.TestSheet;
+import android.graphics.Color;
 import android.util.Log;
+
+
+
+
+import android.util.Pair;
+import android.util.SparseArray;
+
 
 
 //import android.util.Log;
@@ -20,6 +36,7 @@ import com.google.zxing.ChecksumException;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.FormatException;
 import com.google.zxing.NotFoundException;
+import com.google.zxing.PointsAverager;
 import com.google.zxing.Reader;
 import com.google.zxing.Result;
 import com.google.zxing.ResultPoint;
@@ -109,17 +126,22 @@ public class TestReader implements Reader {
 	      {1, 3, 3, 2, 1, 1, 1}
 	};
 	
-	public static final int MAX_ANSWERS_COUNT = CODE_PATTERNS.length;
+	public static final int MAX_TEST_ROWS = CODE_PATTERNS.length;
+	
+	private static final int CONFIDENCE_THRESHOLD = 8;
 
-	private HashMap<TestResult, Integer> possibleResults;
-	private TestResult[] acceptedResults;
+	private HashMap<QuestionAnswers, Integer> possibleResults;
+	//private QuestionAnswers[] acceptedResults;
 	
 	private ResultPointCallback resultPointCallback = null;
 	private TestResultCallback testResultCallback = null;
 	
+	private TestSheet currentTestSheet;
+	private AnswerSheet answerSheet;
+	
 	public TestReader() {
-		possibleResults = new HashMap<TestResult, Integer>(200);
-		acceptedResults = new TestResult[MAX_ANSWERS_COUNT];
+		possibleResults = new HashMap<QuestionAnswers, Integer>(200);
+		//acceptedResults = new QuestionAnswers[MAX_TEST_ROWS];
 	}
 	
 	@Override
@@ -198,36 +220,6 @@ public class TestReader implements Reader {
 		
 		return new Marker(new ResultPoint(x, reverse ? height - position : position), bestMatch);
 	}
-
-	private class TestRegion {
-		private int regionCode;
-		private ResultPoint upper;
-		private ResultPoint lower;
-		private float angle;
-
-		public int getRegionCode() {
-			return regionCode;
-		}
-
-		public ResultPoint getUpperPoint() {
-			return upper;
-		}
-		
-		public ResultPoint getLowerPoint() {
-			return lower;
-		}
-		
-		public float getSlopeAngle() {
-			return angle;
-		}
-
-		public TestRegion(int regionCode, ResultPoint upperPoint, ResultPoint lowerPoint) {
-			this.regionCode = regionCode;
-			this.upper = upperPoint;
-			this.lower = lowerPoint;
-			this.angle = (float)ResultPoint.getAtan2(upperPoint, lowerPoint);
-		}
-	}
 	
 	private class Marker {
 		int code;
@@ -268,28 +260,6 @@ public class TestReader implements Reader {
 		return markers;
 	}
 	
-	private class PointsAverager {
-		float x = 0;
-		float y = 0;
-		int count = 0;
-		
-		public void addPoint(ResultPoint point) {
-			x += point.getX();
-			y += point.getY();
-			count ++;
-		}
-		
-		public void clear() {
-			count = 0;
-			x = 0;
-			y = 0;
-		}
-		
-		public ResultPoint getAveragePoint() {
-			return new ResultPoint(x / count, y / count);
-		}
-	}
-	
 	List<Marker> averageMarkersPositions(List<Marker> markers) {
 		List<Marker> result = new ArrayList<Marker>();
 		
@@ -320,7 +290,7 @@ public class TestReader implements Reader {
 		return averageMarkersPositions(rejectOddResults(markers));
 	}
 	
-	List<TestRegion> detectTestAreas(BitMatrix matrix) {
+	List<TestRegion> detectTestRegions(BitMatrix matrix) {
 		List<Marker> upperMarkers = new ArrayList<Marker>(),
 				lowerMarkers = new ArrayList<Marker>();
 
@@ -332,7 +302,7 @@ public class TestReader implements Reader {
 			try {
 				Marker marker = findPatternOnColumn(column, x, CODE_PATTERNS, false, height);
 				upperMarkers.add(marker);
-				limit = (int)marker.getPosition().getY();
+				limit = height - (int)marker.getPosition().getY();
 			}
 			catch (NotFoundException ex) { }
 			column.reverse();
@@ -362,7 +332,8 @@ public class TestReader implements Reader {
 					continue;
 				}
 				
-				if (upper.getCode() % LOWER_PATTERNS.length == lower.getCode()) {
+				if (upper.getCode() % LOWER_PATTERNS.length == lower.getCode()
+						&& upper.getCode() < currentTestSheet.getTestRowsCount()) {
 					TestRegion region = new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition());
 					
 					float angle = region.getSlopeAngle();
@@ -402,6 +373,8 @@ public class TestReader implements Reader {
 				if (checked > 4) return true;
 			}
 		}*/
+		
+		// TODO: zaimplementowaæ algorytm Bresenhama
 		for (int y = cY - r; y < cY + r; y ++) {
 			if (y != cY && matrix.get(cX, y)) {
 				checked ++;
@@ -412,50 +385,56 @@ public class TestReader implements Reader {
 	}
 	
 	private void detectGivenAnswers(BitMatrix matrix, List<TestRegion> testRegions) {
-		int answersCount = 4;
 		int margin = 10;
 		int boxHeight = 27;
 		int boxAreaHeight = boxHeight + 2 * 5; // 5px margins
 		float halfBoxAreaHeight = boxAreaHeight / 2;
 		float halfBoxHeight = boxHeight / 2;
 		
+		int testSheetRowCount = currentTestSheet.getTestRowsCount();
+		
 		for (TestRegion region : testRegions) {
-			int totalHeight = answersCount * boxAreaHeight + margin * 2;
+			int rowId = region.getRegionCode();
+			if (rowId >= testSheetRowCount) continue;
 			
-			TestResult result = new TestResult(region.getRegionCode() + 1);
-			List<TestResultMarker> markers = new ArrayList<TestResultMarker>(2);
+			TestRow testRow = currentTestSheet.getTestRow(rowId);
+			
+			QuestionAnswers result = new QuestionAnswers(rowId, testRow);
+			
+			int answersCount = testRow.getAnswersCount();
+			int totalHeight = testRow.getReservedSpaceSize() * boxAreaHeight + margin * 2;
 			
 			for (int i = 0; i < answersCount; i++) {
 				float boxY = margin + i * boxAreaHeight + halfBoxAreaHeight;
 				float dpp = ResultPoint.distance(region.getUpperPoint(), region.getLowerPoint()) / totalHeight;
 				ResultPoint center = ResultPoint.lerp(region.getUpperPoint(), region.getLowerPoint(), boxY / totalHeight);
+				center.setColor(Color.BLUE);
 				
 				if (isTicked(matrix, center, halfBoxHeight * dpp)) {
 					result.addMarkedAnswer(i);
-					markers.add(new TestResultMarker(center.getX(), center.getY(), boxHeight * dpp, region.getSlopeAngle(), result));
 					resultPointCallback.foundPossibleResultPoint(center);
 				}
 			}
 			
-			testResultCallback.foundPossibleAnswer(result);
 			foundPossibleAnswer(result);
 		}
 	}
 	
-	private void foundPossibleAnswer(TestResult answer) {
-		int questionNo = answer.getQuestionNo();
-		if (questionNo >= MAX_ANSWERS_COUNT) return;
+	private void foundPossibleAnswer(QuestionAnswers answer) {
+		int questionNo = answer.getTestRowId();
+		if (questionNo >= MAX_TEST_ROWS) return;
 
+		testResultCallback.foundPossibleAnswer(answer);
 		Integer reliability = possibleResults.get(answer);
 		if (reliability == null) reliability = 0;
 		
 		possibleResults.put(answer, ++reliability);
 
 		if (reliability > 2) {
-				TestResult accepted = acceptedResults[questionNo];
+				QuestionAnswers accepted = answerSheet.getAcceptedAnswer(questionNo);
 				
 				if (accepted != null) {
-					if (accepted.isMarkedByUser())
+					if (accepted.isMarkedByUser()) // nie podmieniaj odpowiedzi zaznaczonych rêcznie
 						return;
 					
 					Integer acceptedReliability = possibleResults.get(accepted);
@@ -463,70 +442,67 @@ public class TestReader implements Reader {
 						return;
 				}
 				
-				acceptedResults[questionNo] = answer;
+				if (reliability > CONFIDENCE_THRESHOLD)
+					answer.trust();
 				
-				testResultCallback.foundAnswer(answer);
+				answerSheet.addAcceptedAnswer(answer);
 		}
 	}
 	
 	@Override
 	public Result decode(BinaryBitmap image, Map<DecodeHintType, ?> hints)
 			throws NotFoundException, ChecksumException, FormatException {
-
-		testResultCallback = hints == null ? null :
-			(TestResultCallback) hints.get(DecodeHintType.NEED_TEST_RESULT_CALLBACK);
-		resultPointCallback = hints == null ? null :
-	        (ResultPointCallback) hints.get(DecodeHintType.NEED_RESULT_POINT_CALLBACK);
+		
+		testResultCallback = (TestResultCallback) hints.get(DecodeHintType.NEED_TEST_RESULT_CALLBACK);
+		resultPointCallback = (ResultPointCallback) hints.get(DecodeHintType.NEED_RESULT_POINT_CALLBACK);
+		
+		TestSheet testSheet = testResultCallback.getTestSheet();
+		answerSheet = testResultCallback.getAnswerSheet();
+		
+		if (testSheet != currentTestSheet) {
+			restartState();
+			currentTestSheet = testSheet;
+		}
+		
+		if (currentTestSheet == null || answerSheet == null)
+			throw NotFoundException.getNotFoundInstance();
 
 		BitMatrix matrix = image.getBlackMatrix();
 		
-		List<TestRegion> testRegions = detectTestAreas(matrix);
+		List<TestRegion> testRegions = detectTestRegions(matrix);
+		if (testRegions.size() > 2) {
+			testResultCallback.foundArea(
+					new TestArea(testRegions.get(0), testRegions.get(testRegions.size() - 1), testRegions.size()));
+		}
 		
 		detectGivenAnswers(matrix, testRegions);
 		
-		if (testRegions.size() > 2) {
-			ResultPoint[] area = { testRegions.get(0).getUpperPoint(), testRegions.get(testRegions.size() - 1).getUpperPoint(),
-					testRegions.get(testRegions.size() - 1).getLowerPoint(), testRegions.get(0).getLowerPoint() };
-			resultPointCallback.foundArea(area);
-		}
-		
-		
-		//return new Result("", new byte[] { }, resultPoints, BarcodeFormat.TEST);
-		throw NotFoundException.getNotFoundInstance();
+		boolean allAnswersTrustworthy = true;
 
-		/*
-		int height = matrix.getHeight();
-		int halfWidth = matrix.getWidth() / 2;
-		
-		int crosses = 0;
-		
-		for (int x = halfWidth - 50; x < halfWidth + 50; x++)
-		{
-			//int x = matrix.getWidth() / 2;
-			boolean state = matrix.get(x, 0);
-			for (int i = 0; i < height; i ++)
-			{
-				boolean newState = matrix.get(x, i);
-				if (newState != state)
-				{
-					state = newState;
-					if (newState)
-					{
-						crosses ++;
-						resultPointCallback.foundPossibleResultPoint(new ResultPoint(x, i));
-					}
-				}
+		int questionsCount = testSheet.getQuestionsCount();
+		for (int i = 0; i < questionsCount; i ++) {
+			QuestionAnswers accepted = answerSheet.getAcceptedAnswer(i);
+			if (accepted == null || accepted.isTrustworthy() == false) {
+				allAnswersTrustworthy = false;
+				break;
 			}
 		}
-		Log.d(TAG, "Liczba linii: " + crosses);*/
 		
-		
-		//return null;
+		if (allAnswersTrustworthy) {
+			TestDecoderResult result = new TestDecoderResult(testResultCallback.getAnswerSheet());
+			restartState();
+			return result;
+		}
+
+		throw NotFoundException.getNotFoundInstance();
 	}
 
 	@Override
 	public void reset() {
-		//offset = 0;
-		// do nothing
+		// do nothing (gets called every frame)
+	}
+	
+	private void restartState() {
+		possibleResults.clear();
 	}
 }

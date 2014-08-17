@@ -16,6 +16,8 @@
 
 package com.google.zxing;
 
+import pl.adamp.testchecker.test.TestArea;
+
 /**
  * Callback which is invoked when a possible result point (significant
  * point in the barcode image such as a corner) is found.
@@ -23,9 +25,5 @@ package com.google.zxing;
  * @see DecodeHintType#NEED_RESULT_POINT_CALLBACK
  */
 public interface ResultPointCallback {
-
   void foundPossibleResultPoint(ResultPoint point);
-  
-  void foundArea(ResultPoint[] points);
-
 }

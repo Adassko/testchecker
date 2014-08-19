@@ -4,6 +4,7 @@ import java.util.Date;
 
 import pl.adamp.testchecker.client.R;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -13,9 +14,14 @@ import android.content.Context;
 final class DBHelper {
 	private static final String TAG = DBHelper.class.getSimpleName();
 	private Context context;
+	private String lastError = null;
 
 	public DBHelper(Context context) {
 		this.context = context;
+	}
+	
+	public String getLastError() {
+		return lastError;
 	}
 	
 	public void select(String sql, String[] args, RowReader reader) {
@@ -35,6 +41,10 @@ final class DBHelper {
 					break;
 				}
 			}
+		}
+		catch (SQLiteException ex) {
+			lastError = ex.getMessage();
+			Log.d(TAG, ex.toString());
 		} finally {
 			if (cursor != null) {
 				cursor.close();
@@ -54,6 +64,11 @@ final class DBHelper {
 		try {
 			db = helper.getWritableDatabase();
 			return db.insert(table, null, values);
+		}
+		catch (SQLiteException ex) {
+			lastError = ex.getMessage();
+			Log.d(TAG, ex.toString());
+			return -1;
 		} finally {
 			if (db != null) {
 				db.close();
@@ -70,6 +85,11 @@ final class DBHelper {
 		try {
 			db = helper.getWritableDatabase();
 			return db.delete(table, where, whereArgs);
+		}
+		catch (SQLiteException ex) {
+			lastError = ex.getMessage();
+			Log.d(TAG, ex.toString());	
+			return 0;
 		} finally {
 			if (db != null) {
 				db.close();
@@ -86,6 +106,11 @@ final class DBHelper {
 		try {
 			db = helper.getWritableDatabase();
 			return db.update(table, values, where, whereArgs);
+		}
+		catch (SQLiteException ex) {
+			lastError = ex.getMessage();
+			Log.d(TAG, ex.toString());
+			return 0;
 		} finally {
 			if (db != null) {
 				db.close();
@@ -105,11 +130,16 @@ final class DBHelper {
 				try {
 					reader.readRow(rdr);
 				}
-				catch (Exception e) {
-					Log.d(TAG, e.toString());
+				catch (Exception ex) {
+					lastError = ex.getMessage();
+					Log.d(TAG, ex.toString());
 					break;
 				}
 			}
+		}
+		catch (SQLiteException ex) {
+			lastError = ex.getMessage();
+			Log.d(TAG, ex.toString());
 		} finally {
 			if (cursor != null) {
 				cursor.close();

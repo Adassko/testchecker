@@ -38,7 +38,7 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		final List<Question> result = new ArrayList<Question>();
 		final SparseArray<Question> questionsById = new SparseArray<Question>();
 		db.select(
-				"SELECT q.Id, q.Text, tq.Value, a.Id AnswerId, a.Text AnswerText, a.IsCorrect"
+				"SELECT q.Id, q.QuestionCategoryId, q.Text, tq.Value, a.Id AnswerId, a.Text AnswerText, a.IsCorrect"
 				+ "	FROM TestQuestions tq"
 				+ "	JOIN Questions q ON q.Id = tq.QuestionId"
 				+ "	LEFT JOIN Answers a ON a.QuestionId = q.Id"
@@ -52,6 +52,7 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 						Question q = questionsById.get(questionId);
 						if (q == null) {
 							q = new Question(r.getInt("Id"), r.getString("Text"), r.getInt("Value"));
+							q.setCategoryId(r.getInt("QuestionCategoryId", -1));
 							questionsById.put(questionId, q);
 							result.add(q);
 						}
@@ -135,6 +136,33 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 					}
 				});
 		return result;
+	}
+	
+	/**
+	 * Zwraca kategoriê do której nale¿y pytanie
+	 * @param question Pytanie
+	 * @return Kategoria do której nale¿y pytanie
+	 */
+	public QuestionCategory getQuestionCategory(Question question) {
+		final QuestionCategory[] result = new QuestionCategory[] { QuestionCategory.DefaultCategory };
+		
+		db.select(
+				"SELECT c.Id, c.Name"
+						+ "	FROM Questions q"
+						+ "	JOIN QuestionCategories c ON c.Id = q.QuestionCategoryId"
+						+ "	WHERE q.Id = ?",
+				vals(question.getId()),
+				new RowReader() {
+					public void readRow(Reader r) {
+						QuestionCategory x = new QuestionCategory(r.getInt("Id"), r.getString("Name"));
+						x.setQuestionsInflater(instance);
+						result[0] = x;
+					}
+				});
+		QuestionCategory defaultCategory = QuestionCategory.DefaultCategory;
+		defaultCategory.setQuestionsInflater(this);
+
+		return result[0];	
 	}
 	
 	/**

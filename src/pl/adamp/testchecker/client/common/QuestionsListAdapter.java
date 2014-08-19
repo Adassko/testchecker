@@ -1,10 +1,13 @@
 package pl.adamp.testchecker.client.common;
 
 import java.util.List;
+
 import pl.adamp.testchecker.client.R;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,10 +18,18 @@ import android.widget.TextView;
 public class QuestionsListAdapter extends BaseExpandableListAdapter {
     private Context _context;
     private List<QuestionCategory> categories;
+    private SelectedCallback selectedCallback;
+    private int color_selected;
  
     public QuestionsListAdapter(Context context, List<QuestionCategory> categories) {
         this._context = context;
+        Resources resources = context.getResources();
+        this.color_selected = resources.getColor(R.color.question_selected);
         this.categories = categories;
+    }
+    
+    public void setSelectedCallback(SelectedCallback callback) {
+    	this.selectedCallback = callback;
     }
  
     @Override
@@ -45,13 +56,19 @@ public class QuestionsListAdapter extends BaseExpandableListAdapter {
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this._context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = infalInflater.inflate(R.layout.questions_item, null);
+            convertView = infalInflater.inflate(R.layout.single_item, null);
         }
  
+        boolean isSelected = false;
+        if (selectedCallback != null) {
+        	isSelected = selectedCallback.isSelected(question);
+        }
+        convertView.setBackgroundColor(isSelected ? color_selected : Color.TRANSPARENT);
+
         convertView.setTag(R.id.item, question);
         convertView.setTag(R.id.parent, category);
         TextView txtListChild = (TextView) convertView
-                .findViewById(R.id.questionsItem);
+                .findViewById(R.id.single_item);
  
         txtListChild.setText(childText);
         return convertView;
@@ -97,6 +114,7 @@ public class QuestionsListAdapter extends BaseExpandableListAdapter {
  
         convertView.setTag(R.id.parent, null);
         convertView.setTag(R.id.item, category);
+        
         TextView lblListHeader = (TextView) convertView
                 .findViewById(R.id.questionsGroupHeader);
         lblListHeader.setTypeface(null, Typeface.BOLD);
@@ -113,5 +131,9 @@ public class QuestionsListAdapter extends BaseExpandableListAdapter {
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
+    }
+    
+    public static interface SelectedCallback {
+    	boolean isSelected(Question question); 
     }
 }

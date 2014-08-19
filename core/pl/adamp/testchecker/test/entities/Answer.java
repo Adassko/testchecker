@@ -2,7 +2,7 @@ package pl.adamp.testchecker.test.entities;
 
 import java.io.Serializable;
 
-public class Answer implements Serializable {
+public class Answer implements Serializable, HasId {
 	private static final long serialVersionUID = 2642447049129762178L;
 
 	private String text;

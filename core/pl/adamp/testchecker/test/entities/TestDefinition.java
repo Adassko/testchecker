@@ -14,7 +14,7 @@ import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 import android.util.Pair;
 import android.util.SparseArray;
 
-public class TestDefinition implements Serializable {
+public class TestDefinition implements Serializable, HasId {
 	private static final long serialVersionUID = -2301572555540307633L;
 
 	private List<Question> questions;

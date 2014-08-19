@@ -15,7 +15,7 @@
  limitations under the License.
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-
+	<color name="question_selected">#50F0FFD1</color>
     <color name="contents_text">#ff000000</color>
     <color name="encode_view">#ffffffff</color>
     <color name="possible_result_points">#c0ffbd21</color>

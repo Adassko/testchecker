@@ -190,6 +190,7 @@ public class CreateTestActivity extends Activity {
 					container, false);
 
 			expListView = (ExpandableListView) rootView.findViewById(R.id.questionsList);
+			expListView.setEmptyView(inflater.inflate(R.layout.empty, null));
 			choosenTest = getTestActivity().getChoosenTest();
 
 			categories = getDataManager().getQuestionCategories();
@@ -197,6 +198,11 @@ public class CreateTestActivity extends Activity {
 
 			listAdapter = new QuestionsListAdapter(rootView.getContext(), categories);
 			expListView.setAdapter(listAdapter);
+			listAdapter.setSelectedCallback(new QuestionsListAdapter.SelectedCallback() {
+				public boolean isSelected(Question question) {
+					return selectedQuestions.contains(question);
+				}
+			});
 			if (categories.size() == 1) {
 				expListView.expandGroup(0);
 			}
@@ -213,14 +219,12 @@ public class CreateTestActivity extends Activity {
 						if (selectedQuestions.contains(question)) {
 							if (getDataManager().unassignTestQuestion(question, choosenTest)) {
 								selectedQuestions.remove(question);
-								v.setSelected(false);
-								v.setBackgroundColor(Color.argb(255, 90, 90, 110));
+								v.setBackgroundColor(Color.TRANSPARENT);
 							}
 						} else {
 							if (getDataManager().assignQuestionToTest(question, choosenTest)) {
 								selectedQuestions.add(question);
-								v.setSelected(true);
-								v.setBackgroundColor(0);
+								v.setBackgroundColor(getActivity().getResources().getColor(R.color.question_selected));
 							}
 						}
 						return true;
@@ -241,6 +245,14 @@ public class CreateTestActivity extends Activity {
 							return true; // nie pokazuj menu kontekstowego
 					}
 					return false;
+				}
+			});
+			
+			((Button)rootView.findViewById(R.id.button_new_question)).setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Intent intent = new Intent(getActivity(), QuestionEditActivity.class);
+					startActivityForResult(intent, QUESTION_EDIT_RESULT);
 				}
 			});
 			

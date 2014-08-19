@@ -8,4 +8,66 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="pl.adamp.testchecker.client.QuestionEditActivity$PlaceholderFragment" >
 
+    <Button
+        android:id="@+id/button_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/save" />
+
+    <Button
+        android:id="@+id/button_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/button_save"
+        android:text="@string/cancel" />
+
+    <EditText
+        android:id="@+id/question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="@string/question_text"
+        android:inputType="textCapSentences" />
+
+    <SeekBar
+        android:id="@+id/seekbar_question_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_save"
+        android:layout_alignLeft="@+id/button_save"
+        android:max="@integer/max_question_value"
+        android:progress="1" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/seekbar_question_value"
+        android:layout_alignLeft="@+id/seekbar_question_value"
+        android:text="@string/question_value" />
+
+    <ListView
+        android:id="@+id/listView_answers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/textView1"
+        android:layout_alignLeft="@+id/question"
+        android:layout_below="@+id/spinner_question_category"
+        android:choiceMode="multipleChoice" >
+
+    </ListView>
+
+    <Spinner
+        android:id="@+id/spinner_question_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/listView_answers"
+        android:layout_below="@+id/question" />
+
 </RelativeLayout>

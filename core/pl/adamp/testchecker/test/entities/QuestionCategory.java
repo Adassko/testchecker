@@ -5,7 +5,7 @@ import java.util.List;
 
 import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 
-public class QuestionCategory {
+public class QuestionCategory implements HasId {
 	public static final QuestionCategory DefaultCategory = new NullObject();
 	
 	private int id;

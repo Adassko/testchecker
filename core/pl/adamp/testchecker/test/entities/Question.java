@@ -6,13 +6,13 @@ import java.util.List;
 import pl.adamp.testchecker.test.TestRow;
 import pl.adamp.testchecker.test.interfaces.AnswersInflater;
 
-public class Question extends TestRow {
+public class Question extends TestRow implements HasId {
 	private static final long serialVersionUID = 1098464872533403480L;
-	
 	private String question;
 	private List<Answer> answers;
 	private int value;
 	private int id;
+	private int categoryId;
 	private AnswersInflater inflater;
 	
 	public Question(String question) {
@@ -24,6 +24,14 @@ public class Question extends TestRow {
 		this.question = question;
 		this.answers = new ArrayList<Answer>(4);
 		this.value = value;
+	}
+	
+	public void setCategoryId(int categoryId) {
+		this.categoryId = categoryId;
+	}
+	
+	public int getCategoryId() {
+		return this.categoryId;
 	}
 	
 	public void setAnswersInflater(AnswersInflater inflater) {

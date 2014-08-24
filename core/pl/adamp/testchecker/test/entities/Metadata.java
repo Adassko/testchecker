@@ -84,10 +84,6 @@ public class Metadata implements Serializable {
 		private final int position;
 		private final Metadata metadata;
 		
-		/*public void setValue(Integer value) {
-			metadata.setValue(position, value);
-		}*/
-		
 		public int getPosition() {
 			return this.position;
 		}
@@ -111,7 +107,7 @@ public class Metadata implements Serializable {
 		public String getName() {
 			return this.name;
 		}
-		
+				
 		public int getAnswersCount() {
 			return this.answersCount;
 		}

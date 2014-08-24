@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import pl.adamp.testchecker.client.R;
-import pl.adamp.testchecker.test.entities.TestDefinition;
+import pl.adamp.testchecker.client.test.TestDefinition;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

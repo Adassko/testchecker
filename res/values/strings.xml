@@ -15,6 +15,18 @@
  limitations under the License.
 -->
 <resources>
+    <string name="msg_test_removed">The test has been removed</string>
+    <string name="msg_cannot_remove_test">Test cannot be removed due to unknown reason</string>
+    <string name="menu_tests_editname">Edit name&#8230;</string>
+    <string name="menu_tests_remove">Remove test</string>
+    <string name="msg_remove_test">Are you sure you want to remove this test?</string>
+    <string name="msg_remove_printed_test">This test has been already printed. It will be impossible to check it after removal. Are you sure?</string>
+    <string name="test_variant">Test variant</string>
+    <string name="button_choose_test">Choose test</string>
+    <string name="scan_test_barcode">Place test barcode under scanner or click \"Choose test\"</string>
+    <string name="no_test_selected">No test selected</string>
+    <string name="test_identifier">test %1$s variant %2$d</string>
+    <string name="student_id">Student ID</string>
     <string name="msg_edit_not_safe">Editing may void any previously printed test sheets. Are you sure?</string>
     <string name="msg_new_test">New test</string>
     <string name="msg_new_test_name">New test name</string>

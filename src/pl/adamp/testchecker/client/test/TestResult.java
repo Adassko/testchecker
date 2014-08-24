@@ -9,6 +9,7 @@ public class TestResult {
 	private int points;
 	private int totalPoints;
 	private Map<String, String> metadata;
+	private long studentId;
 	
 	public TestResult() {
 		this.metadata = new HashMap<String, String>();
@@ -16,6 +17,14 @@ public class TestResult {
 	
 	public void setMetadataValue(String metadataName, String value) {
 		metadata.put(metadataName, value);
+	}
+	
+	public void setStudentId(long id) {
+		this.studentId = id;
+	}
+	
+	public long getStudentId() {
+		return this.studentId;
 	}
 	
 	public void setCorrect(int correct) {

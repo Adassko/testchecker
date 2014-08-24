@@ -38,20 +38,20 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="center"
+        android:gravity="top"
         android:padding="@dimen/standard_padding">
 
       <LinearLayout
           android:orientation="vertical"
           android:layout_width="wrap_content"
           android:layout_height="fill_parent"
-          android:gravity="right|center_vertical">
+          android:gravity="right">
 
         <ImageView android:id="@+id/barcode_image_view"
-                   android:layout_width="160dip"
+                   android:layout_width="150dip"
                    android:layout_height="wrap_content"
-                   android:maxWidth="160dip"
-                   android:maxHeight="160dip"
+                   android:maxWidth="150dip"
+                   android:maxHeight="150dip"
                    android:layout_marginBottom="@dimen/half_padding"
                    android:adjustViewBounds="true"
                    android:scaleType="centerInside"/>
@@ -136,13 +136,13 @@
       </LinearLayout>
 
       <ScrollView
-          android:layout_width="wrap_content"
+          android:layout_width="fill_parent"
           android:layout_height="wrap_content">
 
         <LinearLayout
+          android:orientation="vertical"
           android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:orientation="vertical">
+          android:layout_height="wrap_content">
 
           <TextView android:id="@+id/contents_text_view"
                     android:layout_width="wrap_content"
@@ -159,7 +159,8 @@
                     android:textColor="@color/result_text"
                     android:textColorLink="@color/result_text"
                     android:paddingLeft="12dip"
-                    android:autoLink="web"/>
+                    android:autoLink="web"
+                    android:clickable="true"/>
 
         </LinearLayout>
 
@@ -168,9 +169,9 @@
     </LinearLayout>
 
     <LinearLayout android:id="@+id/result_button_view"
+                  android:orientation="horizontal"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
-                  android:orientation="horizontal"
                   android:gravity="center">
 
       <Button style="@style/ResultButton"
@@ -189,12 +190,22 @@
 
   </LinearLayout>
 
-  <TextView android:id="@+id/status_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/transparent"
-            android:text="@string/msg_default_status"
-            android:textColor="@color/status_text"/>
+  <TextView
+      android:id="@+id/status_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="bottom|center_horizontal"
+      android:background="@color/transparent"
+      android:text="@string/scan_test_barcode"
+      android:textColor="@color/status_text" />
+
+  <TextView
+      android:id="@+id/textView_test_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/no_test_selected"
+      android:layout_marginTop="50dp"
+      android:layout_marginLeft="5dp"
+      android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </merge>

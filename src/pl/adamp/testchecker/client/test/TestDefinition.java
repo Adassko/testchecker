@@ -1,4 +1,4 @@
-package pl.adamp.testchecker.test.entities;
+package pl.adamp.testchecker.client.test;
 
 import java.io.Serializable;
 import java.io.StringBufferInputStream;
@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Random;
 
 import pl.adamp.testchecker.test.TestRow;
+import pl.adamp.testchecker.test.entities.Listable;
+import pl.adamp.testchecker.test.entities.Metadata;
+import pl.adamp.testchecker.test.entities.Question;
+import pl.adamp.testchecker.test.entities.TestSheet;
 import pl.adamp.testchecker.test.entities.Metadata.Type;
 import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 import android.util.Pair;
@@ -220,8 +224,9 @@ public class TestDefinition implements Serializable, Listable {
 			q.setReservedSpaceSize(maxAnswersCount); // wyrównaj kratki odpowiedzi na arkuszu testowym
 		}
 		
-		if (studentIdLength > 0)
+		if (studentIdLength > 0) {
 			result.addMetadata(new Metadata(Type.StudentId, studentIdLength));
+		}
 		
 		return result;
 	}

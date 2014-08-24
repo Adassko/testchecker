@@ -475,11 +475,12 @@ public class TestReader implements Reader {
 		resultPointCallback = (ResultPointCallback) hints.get(DecodeHintType.NEED_RESULT_POINT_CALLBACK);
 		
 		TestSheet testSheet = testResultCallback.getTestSheet();
-		answerSheet = testResultCallback.getAnswerSheet();
+		AnswerSheet newAnswerSheet = testResultCallback.getAnswerSheet();
 		
-		if (testSheet != currentTestSheet) {
+		if (testSheet != currentTestSheet || answerSheet != newAnswerSheet) {
 			restartState();
 			currentTestSheet = testSheet;
+			answerSheet = newAnswerSheet;
 		}
 		
 		if (currentTestSheet == null || answerSheet == null) {

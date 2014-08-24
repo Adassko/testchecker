@@ -8,12 +8,12 @@ import java.util.Set;
 
 import pl.adamp.testchecker.client.common.DBHelper.Reader;
 import pl.adamp.testchecker.client.common.DBHelper.RowReader;
+import pl.adamp.testchecker.client.test.TestDefinition;
 import pl.adamp.testchecker.test.entities.Answer;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
 import pl.adamp.testchecker.test.interfaces.AnswersInflater;
 import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
-import pl.adamp.testchecker.test.entities.TestDefinition;
 import android.content.ContentValues;
 import android.content.Context;
 import android.util.Log;

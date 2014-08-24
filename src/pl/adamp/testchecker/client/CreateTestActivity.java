@@ -25,8 +25,6 @@ import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,9 +34,9 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
@@ -46,24 +44,22 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ListView;
-import pl.adamp.testchecker.client.R.array;
 import pl.adamp.testchecker.client.common.DataManager;
 import pl.adamp.testchecker.client.common.DialogHelper;
 import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
 import pl.adamp.testchecker.client.common.QuestionsFlatListAdapter;
 import pl.adamp.testchecker.client.common.QuestionsListAdapter;
-import pl.adamp.testchecker.client.common.TestPrinter;
-import pl.adamp.testchecker.client.common.TestPrinter.PaperSize;
 import pl.adamp.testchecker.client.common.TestsListAdapter;
+import pl.adamp.testchecker.client.test.TestDefinition;
+import pl.adamp.testchecker.client.test.TestPrinter;
+import pl.adamp.testchecker.client.test.TestPrinter.PaperSize;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
-import pl.adamp.testchecker.test.entities.TestDefinition;
 import pl.adamp.testchecker.test.entities.TestSheet;
 
 public class CreateTestActivity extends Activity {
@@ -156,7 +152,7 @@ public class CreateTestActivity extends Activity {
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
-			setName("Wybór testu");
+			setName(R.string.button_choose_test);
 			
 			View rootView = inflater.inflate(R.layout.fragment_choose_test,
 					container, false);
@@ -169,6 +165,7 @@ public class CreateTestActivity extends Activity {
 			listAdapter = new TestsListAdapter(rootView.getContext(), tests);
 			testsListView.setAdapter(listAdapter);
 			
+			registerForContextMenu(testsListView);
 			testsListView.setOnItemClickListener(new OnItemClickListener() {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
@@ -181,6 +178,79 @@ public class CreateTestActivity extends Activity {
 			newTestButton.setOnClickListener(newTestClick);
 			
 			return rootView;
+		}
+		
+		@Override
+		public void onDestroyView() {
+			unregisterForContextMenu(getView().findViewById(R.id.listView_testList));
+			super.onDestroyView();
+		}
+		
+		
+		@Override
+		public void onCreateContextMenu(ContextMenu menu, View v,
+				ContextMenuInfo menuInfo) {
+			if (v.getId() == R.id.listView_testList) {
+			    MenuInflater inflater = new MenuInflater(getActivity());
+			    AdapterContextMenuInfo mi = (AdapterContextMenuInfo) menuInfo;
+			    Object o = listAdapter.getItem(mi.position);
+			    if (o instanceof TestDefinition) {
+			    	TestDefinition test = (TestDefinition)o;
+			    	menu.setHeaderTitle(test.getName());
+			    	inflater.inflate(R.menu.tests, menu);
+			    	return;
+			    }
+			}
+			super.onCreateContextMenu(menu, v, menuInfo);
+		}
+		
+		@Override
+		public boolean onContextItemSelected(MenuItem item) {
+		    AdapterContextMenuInfo mi = (AdapterContextMenuInfo) item.getMenuInfo();
+			Object o = listAdapter.getItem(mi.position);
+			final TestDefinition test;
+			
+			switch (item.getItemId()) {
+			case R.id.menu_tests_remove:
+				test = (TestDefinition)o;
+				DialogHelper.showDialog(getActivity(), R.string.msg_sure, R.string.msg_remove_test, new OnAcceptListener() {
+					@Override
+					public void onAccept(String input) {
+						final OnAcceptListener accept = new OnAcceptListener() {
+							@Override
+							public void onAccept(String input) {
+								if (getDataManager().deleteTest(test)) {
+									Toast.makeText(getActivity(), R.string.msg_test_removed, Toast.LENGTH_SHORT).show();
+								} else {
+									Toast.makeText(getActivity(), R.string.msg_cannot_remove_test, Toast.LENGTH_SHORT).show();
+								}
+								tests.remove(test);
+								listAdapter.notifyDataSetInvalidated();
+							}
+						};
+						
+						if (test.beenPrinted()) {
+							DialogHelper.showDialog(getActivity(), R.string.msg_sure, R.string.msg_remove_printed_test, accept, false);
+						} else {
+							accept.onAccept(null);
+						}
+					}
+				}, false);
+				return true;
+				
+			case R.id.menu_tests_editname:
+				test = (TestDefinition)o;
+				DialogHelper.showDialog(getActivity(), R.string.menu_tests_editname, R.string.msg_new_test_name, new OnAcceptListener() {
+					@Override
+					public void onAccept(String input) {
+						test.setName(input);
+						getDataManager().saveTest(test);
+						listAdapter.notifyDataSetChanged();
+					}
+				}, true, test.getName());
+				return true;
+			}
+			return super.onOptionsItemSelected(item);
 		}
 		
 		private OnClickListener newTestClick = new OnClickListener() {
@@ -465,6 +535,25 @@ public class CreateTestActivity extends Activity {
 			super.onCreateOptionsMenu(menu, inflater);
 		}
 		
+		@Override
+		public boolean onOptionsItemSelected(MenuItem item) {
+			int id = item.getItemId();
+			if (id == R.id.button_scan) {
+				DialogHelper.showNumberChooser(getActivity(), R.string.test_variant, new OnAcceptListener() {
+					@Override
+					public void onAccept(String input) {
+						Intent intent = new Intent(getActivity(), CaptureActivity.class);
+						intent.putExtra(CaptureActivity.SCAN_TEST_ID, test.getId());
+						intent.putExtra(CaptureActivity.SCAN_TEST_VARIANT, Integer.parseInt(input));
+						
+						startActivity(intent);
+					}
+				}, 1, 1, 40);
+				return true;
+			}
+			return super.onOptionsItemSelected(item);
+		}
+		
 		private void blockLayout(View view) {
 			final View layoutBlocker = view.findViewById(R.id.layout_blocker); 
 			layoutBlocker.setVisibility(View.VISIBLE);
@@ -512,55 +601,42 @@ public class CreateTestActivity extends Activity {
 			}
 			
 			// liczba pytañ
-			EditText questionsCount = (EditText)rootView.findViewById(R.id.editText_questions_count);
+			final EditText questionsCount = (EditText)rootView.findViewById(R.id.editText_questions_count);
 			if (test.getQuestionsCount() < 2 || test.getQuestionsCount() > questions.size()) {
 				test.setQuestionsCount(questions.size());
 			}
 			questionsCount.setText(test.getQuestionsCount() + "");
-			questionsCount.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void afterTextChanged(Editable editable) {
-					int count = parseInt(editable.toString(), test.getQuestionsCount());
-					test.setQuestionsCount(count);
-				}
-
-				@Override
-				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
-				@Override
-				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
-			});
+			questionsCount.setOnClickListener(focusOnClick);
 			questionsCount.setOnFocusChangeListener(new OnFocusChangeListener() {
 				@Override
 				public void onFocusChange(View v, boolean hasFocus) {
-					if (!hasFocus) {
-						limitEditable((EditText)v, 2, questions.size(), questions.size());
-						getDataManager().saveTest(test);
-					}					
-				}				
-			});
-			
-			// d³ugoœæ identyfikatora
-			EditText idLength = (EditText)rootView.findViewById(R.id.editText_id_length);
-			idLength.setText(test.getStudentIdLength() + "");
-			idLength.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void afterTextChanged(Editable editable) {
-					int length = parseInt(editable.toString(), 0);
-					test.setStudentIdLength(length);
-				}
+					if (hasFocus == false) return;
 
-				@Override
-				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
-				@Override
-				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+					DialogHelper.showNumberChooser(getActivity(), R.string.questions_count, new OnAcceptListener() {
+						@Override
+						public void onAccept(String input) {
+							test.setQuestionsCount(parseInt(input, 0));
+							questionsCount.setText(input);
+						}
+					}, test.getQuestionsCount(), 2, questions.size());
+				}
 			});
+
+			// d³ugoœæ identyfikatora
+			final EditText idLength = (EditText)rootView.findViewById(R.id.editText_id_length);
+			idLength.setText(test.getStudentIdLength() + "");
+			idLength.setOnClickListener(focusOnClick);
 			idLength.setOnFocusChangeListener(new OnFocusChangeListener() {
 				@Override
 				public void onFocusChange(View v, boolean hasFocus) {
-					if (!hasFocus) {
-						limitEditable((EditText)v, 0, 11, 0);
-						getDataManager().saveTest(test);
-					}
+					if (hasFocus == false) return;
+					DialogHelper.showNumberChooser(getActivity(), R.string.id_length, new OnAcceptListener() {
+						@Override
+						public void onAccept(String input) {
+							test.setStudentIdLength(parseInt(input, 0));
+							idLength.setText(input);
+						}
+					}, test.getStudentIdLength(), 0, 11);
 				}
 			});
 			
@@ -587,29 +663,23 @@ public class CreateTestActivity extends Activity {
 			});
 			
 			// liczba wariacji
-			EditText variants = (EditText)rootView.findViewById(R.id.editText_variants);
+			final EditText variants = (EditText)rootView.findViewById(R.id.editText_variants);
 			variants.setText("1");
-			variants.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void afterTextChanged(Editable editable) {
-					int v = parseInt(editable.toString(), 0);
-					generate_variants = v;
-				}
-
-				@Override
-				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
-				@Override
-				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
-			});
+			variants.setOnClickListener(focusOnClick);
 			variants.setOnFocusChangeListener(new OnFocusChangeListener() {
 				@Override
 				public void onFocusChange(View v, boolean hasFocus) {
-					if (!hasFocus) {
-						((EditText)v).setText(generate_variants + "");
-					}
+					if (hasFocus == false) return;
+
+					DialogHelper.showNumberChooser(getActivity(), R.string.variants, new OnAcceptListener() {
+						@Override
+						public void onAccept(String input) {
+							generate_variants = parseInt(input, 1);
+							variants.setText(input);
+						}
+					}, generate_variants, 1, 40);
 				}
 			});
-			
 			
 			// przycisk generowania
 			Button generate = (Button)rootView.findViewById(R.id.button_generate);
@@ -627,7 +697,7 @@ public class CreateTestActivity extends Activity {
 					
 					for (int i = 1; i <= generate_variants; i ++) {
 						TestSheet sheet = test.getTestSheet(i);
-						Bitmap bmp = new TestPrinter(sheet).drawToBitmap(PaperSize.A4, 300);
+						Bitmap bmp = new TestPrinter(getActivity(), sheet).drawToBitmap(PaperSize.A4, 300);
 						uris.add(saveBitmap(bmp, sheet));
 					}
 					
@@ -641,6 +711,16 @@ public class CreateTestActivity extends Activity {
 			
 			return rootView;
 		}
+		
+		/**
+		 * Zamienia klikniêcie na zdarzenie focus
+		 */
+		private static OnClickListener focusOnClick = new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				v.getOnFocusChangeListener().onFocusChange(v, true);
+			}
+		};
 		
 		public static Uri saveBitmap(Bitmap bitmap, TestSheet test) {
 			String simpleName = test.getName().replaceAll("[^a-zA-Z0-9 _-]+", "");
@@ -674,14 +754,6 @@ public class CreateTestActivity extends Activity {
 			catch (NumberFormatException nfe) {
 				return def;			
 			}	
-		}
-		
-		private void limitEditable(EditText e, int min, int max, int def) {
-			int value = parseInt(e.getText().toString(), def);
-			if (value < min || value > max) {
-				value = Math.min(max, Math.max(min, value));
-				e.setText(value + "");
-			}
 		}
 	}
 	

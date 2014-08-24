@@ -5,8 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import pl.adamp.testchecker.client.R;
+import pl.adamp.testchecker.client.test.TestDefinition;
 import pl.adamp.testchecker.test.entities.Answer;
-import pl.adamp.testchecker.test.entities.TestDefinition;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;

@@ -47,7 +47,7 @@
         android:progress="1" />
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textView_test_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/seekbar_question_value"
@@ -90,7 +90,7 @@
         android:id="@+id/button_addanswer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView1"
+        android:layout_above="@+id/textView_test_name"
         android:layout_alignParentRight="true"
         android:text="@string/button_addanswer" />
 

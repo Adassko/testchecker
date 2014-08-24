@@ -15,14 +15,14 @@
  limitations under the License.
  -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:id="@+id/menu_choose_test"
-        android:title="@string/button_choose_test"
-        android:icon="@android:drawable/ic_menu_search"
+  <item android:id="@+id/menu_tests_editname"
+        android:title="@string/menu_tests_editname"
+        android:icon="@android:drawable/ic_menu_edit"
         android:orderInCategory="1"
-        android:showAsAction="withText|always" />
-  <item android:id="@+id/menu_complete"
-        android:title="@string/button_next"
-        android:icon="@android:drawable/ic_menu_send"
+        android:showAsAction="withText|ifRoom"/>
+  <item android:id="@+id/menu_tests_remove"
+        android:title="@string/menu_tests_remove"
+        android:icon="@android:drawable/ic_menu_delete"
         android:orderInCategory="2"
-        android:showAsAction="withText|always"/>
+        android:showAsAction="withText|ifRoom"/>
 </menu>

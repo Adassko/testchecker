@@ -17,6 +17,18 @@
 
 -->
 <resources>
+    <string name="msg_test_removed">Test został usunięty</string>
+    <string name="msg_cannot_remove_test">Nie można usunąć testu z nieznanej przyczyny</string>
+    <string name="menu_tests_editname">Edytuj nazwę&#8230;</string>
+    <string name="menu_tests_remove">Usuń test</string>
+    <string name="msg_remove_test">Czy jesteś pewien że chcesz usunąć ten test?</string>
+    <string name="msg_remove_printed_test">Test został już wydrukowany. Usunięcie uniemożliwi jego sprawdzenie. Czy na pewno kontynuować?</string>
+    <string name="test_variant">Wariant testu</string>
+    <string name="button_choose_test">Wybierz test</string>
+    <string name="scan_test_barcode">Umieść kod paskowy testu pod czytnikiem lub kliknij \"Wybierz test\"</string>
+    <string name="no_test_selected">Nie wybrano testu</string>
+    <string name="test_identifier">test %1$s wariant %2$d</string>
+    <string name="student_id">ID studenta</string>
     <string name="msg_edit_not_safe">Edycja może spowodować unieważnienie wszystkich wcześniej wydrukowanych testów. Chcesz kontynuować?</string>
     <string name="msg_new_test">Nowy test</string>
     <string name="msg_new_test_name">Nazwa testu</string>

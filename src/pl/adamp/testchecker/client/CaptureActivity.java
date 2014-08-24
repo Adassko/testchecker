@@ -27,6 +27,7 @@ import com.google.zxing.client.android.camera.CameraManager;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -50,7 +51,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,18 +64,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import pl.adamp.testchecker.client.common.DataManager;
+import pl.adamp.testchecker.client.common.DialogHelper;
+import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
+import pl.adamp.testchecker.client.common.TestsListAdapter;
 import pl.adamp.testchecker.client.result.ResultButtonListener;
 import pl.adamp.testchecker.client.result.ResultHandler;
 import pl.adamp.testchecker.client.result.ResultHandlerFactory;
 import pl.adamp.testchecker.client.share.ShareActivity;
+import pl.adamp.testchecker.client.test.TestDefinition;
 import pl.adamp.testchecker.client.test.TestEvaluator;
 import pl.adamp.testchecker.test.TestDecoderResult;
-import pl.adamp.testchecker.test.entities.TestDefinition;
 import pl.adamp.testchecker.test.entities.TestSheet;
 
 /**
@@ -93,6 +101,9 @@ public final class CaptureActivity extends Activity implements
 	private static final long BULK_MODE_SCAN_DELAY_MS = 1000L;
 
 	public static final int HISTORY_REQUEST_CODE = 0x0000bacc;
+	
+	public static final String SCAN_TEST_ID = "test_id";
+	public static final String SCAN_TEST_VARIANT = "variant";
 
 	private static final Collection<ResultMetadataType> DISPLAYABLE_METADATA_TYPES = EnumSet
 			.of(ResultMetadataType.ISSUE_NUMBER,
@@ -113,6 +124,7 @@ public final class CaptureActivity extends Activity implements
 	private InactivityTimer inactivityTimer;
 	private BeepManager beepManager;
 	private TestDefinition currentTestDefinition;
+	private DataManager dataManager;
 
 	TestSheet getCurrentTestSheet() {
 		return currentTestSheet;
@@ -140,6 +152,8 @@ public final class CaptureActivity extends Activity implements
 		
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
+		
+		dataManager = new DataManager(this);
 
 		hasSurface = false;
 		inactivityTimer = new InactivityTimer(this);
@@ -147,7 +161,46 @@ public final class CaptureActivity extends Activity implements
 
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 		
+		Intent intent = getIntent();
+		int testId = intent.getIntExtra(SCAN_TEST_ID, -1);
+		int variant = intent.getIntExtra(SCAN_TEST_VARIANT, -1);
+		
+		((TextView)findViewById(R.id.status_view))
+		.setText(R.string.scan_test_barcode);
+		
+		if (testId >= 0 && variant >= 1)
+			chooseTest(testId, variant);
+				
 		currentTestSheet = null;
+	}
+	
+	/**
+	 * Zmienia test
+	 * @return True jeœli test istnieje w bazie danych i jest ró¿ny od ju¿ za³adowanego
+	 */
+	private boolean chooseTest(int id, int variant) {
+		if (currentTestDefinition == null || currentTestDefinition.getId() != id)
+			currentTestDefinition = new DataManager(this).getTest(id);
+		
+		if (currentTestDefinition == null)
+			return false;
+
+		if (variant >= 0 && (currentTestSheet == null || currentTestSheet.getVariant() != variant)) {
+			chooseTest(currentTestDefinition.getTestSheet(variant));
+			
+			return true;
+		}
+		return false;
+	}
+	
+	private void chooseTest(TestSheet testSheet) {
+		currentTestSheet = testSheet;		
+
+		((TextView)findViewById(R.id.textView_test_name))
+			.setText(currentTestSheet.getName());
+	
+		((TextView)findViewById(R.id.status_view))
+			.setText(R.string.msg_default_status);
 	}
 
 	@Override
@@ -275,14 +328,41 @@ public final class CaptureActivity extends Activity implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Intent intent = new Intent(Intent.ACTION_VIEW);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+		final Activity that = this;
 		switch (item.getItemId()) {
-		case R.id.menu_share:
-			intent.setClassName(this, ShareActivity.class.getName());
-			startActivity(intent);
+		case R.id.menu_choose_test:
+			List<TestDefinition> tests = new DataManager(this).getTests();
+			final ListView testsList = new ListView(this);
+			testsList.setPadding(7, 7, 7, 7);
+			
+			final AlertDialog dialog = new AlertDialog.Builder(this)
+				.setView(testsList)
+				.setTitle(R.string.button_choose_test)
+				.setNegativeButton(R.string.button_cancel, null)
+				.create();
+
+			final TestsListAdapter adapter = new TestsListAdapter(this, tests); 
+			testsList.setAdapter(adapter);
+			testsList.setOnItemClickListener(new OnItemClickListener() {
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View arg1,
+						int position, long id) {
+					final TestDefinition test = (TestDefinition)adapter.getItem(position);
+					if (test == null) return;
+					
+					DialogHelper.showNumberChooser(that, R.string.test_variant, new OnAcceptListener() {
+						@Override
+						public void onAccept(String input) {
+							chooseTest(test.getTestSheet(Integer.parseInt(input)));
+							dialog.cancel();
+						}
+					}, 1, 1, 40);
+				}
+			});
+			dialog.show();
+			
 			break;
-		case R.id.menu_settings:
-			intent.setClassName(this, PreferencesActivity.class.getName());
-			startActivity(intent);
+		case R.id.menu_complete:
 			break;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -362,14 +442,11 @@ public final class CaptureActivity extends Activity implements
 					int testVariant = Integer.parseInt(matcher.group(2));
 					if (testVariant < 1) return;
 
-					if (currentTestDefinition == null || currentTestDefinition.getId() != testId)
-						currentTestDefinition = new DataManager(this).getTest(testId);
-
-					if (currentTestSheet == null || currentTestSheet.getVariant() != testVariant) {
-						currentTestSheet = currentTestDefinition.getTestSheet(testVariant);
-						Toast.makeText(this, currentTestSheet.getName(), Toast.LENGTH_LONG).show();
+					if (chooseTest(testId, testVariant)) {
+						Toast.makeText(this, currentTestSheet.getName() + " (" + getString(R.string.test_variant) + " " + testVariant + ")",
+								Toast.LENGTH_LONG).show();
+						viewfinderView.clearView();
 					}
-					viewfinderView.clearView();
 				}
 				catch (NumberFormatException | NullPointerException e) {
 					Log.d(TAG, e.toString());
@@ -588,7 +665,6 @@ public final class CaptureActivity extends Activity implements
 
 	private void resetStatusView() {
 		resultView.setVisibility(View.GONE);
-		statusView.setText(R.string.msg_default_status);
 		statusView.setVisibility(View.VISIBLE);
 		viewfinderView.setVisibility(View.VISIBLE);
 		viewfinderView.clearView();

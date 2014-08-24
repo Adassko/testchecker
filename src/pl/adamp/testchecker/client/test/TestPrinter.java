@@ -1,4 +1,4 @@
-package pl.adamp.testchecker.client.common;
+package pl.adamp.testchecker.client.test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,12 +18,16 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
+import pl.adamp.testchecker.client.R;
 import pl.adamp.testchecker.test.TestReader;
 import pl.adamp.testchecker.test.TestRow;
 import pl.adamp.testchecker.test.entities.Answer;
 import pl.adamp.testchecker.test.entities.Metadata;
+import pl.adamp.testchecker.test.entities.Metadata.Type;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.TestSheet;
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
@@ -43,9 +47,11 @@ import android.widget.LinearLayout;
 public class TestPrinter {
 	private TestSheet test;
 	private Canvas canvas;
+	private Resources resources;
 	
-	public TestPrinter(TestSheet test) {
+	public TestPrinter(Context context, TestSheet test) {
 		this.test = test;
+		this.resources = context.getResources();
 	}
 	
 	private static int measureSize(int[] pattern, int singleLineSize) {
@@ -53,10 +59,6 @@ public class TestPrinter {
 		for (int i = 0; i < pattern.length; i ++)
 			size += pattern[i] * singleLineSize;
 		return size;
-	}
-	
-	private static String upperCaseLetter(int index) {
-		return (char)(65 + index % 26) + "";
 	}
 	
 	private static String lowerCaseLetter(int index) {
@@ -109,7 +111,8 @@ public class TestPrinter {
 		top += barcode.getHeight();
 		tp.setTextSize(from.mm(2));
 		tp.setTextAlign(Align.CENTER);
-		new WrappedText("test " + test.getId() + " wariant " + test.getVariant(), tp, barcode.getWidth())
+		String subtext = String.format(resources.getString(R.string.test_identifier), test.getId(), test.getVariant());
+		new WrappedText(subtext, tp, barcode.getWidth())
 			.drawOn(canvas, left + barcode.getWidth() / 2, top);
 
 		// tytu³ testu
@@ -136,8 +139,10 @@ public class TestPrinter {
 	    
 	    // dane typu identyfikator studenta
 	    for (Metadata metadata : test.getMetadata()) {
+	    	int right = left + boxSize;
 	    	List<Metadata.Row> testRows = metadata.getTestRows();
 	    	for (int q = testRows.size() - 1; q >= 0; q --) {
+	    		top = initialTop + boxSize;
 	    		TestRow testRow = testRows.get(q);
 	    		int code = test.getTestRowCode(testRow);
 	    		
@@ -160,12 +165,23 @@ public class TestPrinter {
 				
 				maxTop = Math.max(maxTop, top);
 				left -= boxSize + padding;
-				top = initialTop;
 	    	}
+	    	int width = right - left;
+	    	String name;
+	    	switch (metadata.getType()) {
+	    		case StudentId:
+	    			name = resources.getString(R.string.student_id);
+	    			break;
+	    		default:
+	    			name = metadata.getType().name();
+	    	}
+	    	
+	    	new WrappedText(name, tp, width).drawOn(canvas, (left + right) / 2, initialTop);
 	    }
 	    int metaDataLeft = left;
 	    int metaDataBottom = maxTop;
-	    
+
+	    top = initialTop;
 	    left = initialLeft + boxSize;	    
 	    maxTop = top;
 	    

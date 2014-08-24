@@ -22,7 +22,6 @@
 # view AndroidManifest.xml #generated:124
 -keep class pl.adamp.testchecker.client.TestResultsActivity { <init>(...); }
 
-# view ldpi\res/layout-ldpi/capture.xml #generated:23
 # view res/layout/capture.xml #generated:23
 -keep class pl.adamp.testchecker.client.ViewfinderView { <init>(...); }
 

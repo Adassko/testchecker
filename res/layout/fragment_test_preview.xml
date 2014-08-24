@@ -55,8 +55,8 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/editText_id_length"
                 android:layout_alignParentRight="true"
-                android:ems="10"
-                android:inputType="number" />
+                android:editable="false"
+                android:ems="10" />
 
             <EditText
                 android:id="@+id/editText_id_length"
@@ -66,7 +66,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_toRightOf="@+id/textView_questions_count"
                 android:ems="10"
-                android:inputType="number"
+				android:editable="false"
                 android:text="2"
                 tools:ignore="HardcodedText" />
 
@@ -117,8 +117,8 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/button_generate"
         android:layout_alignParentRight="true"
+        android:editable="false"
         android:ems="10"
-        android:inputType="number"
         android:text="1"
         tools:ignore="HardcodedText" />
 

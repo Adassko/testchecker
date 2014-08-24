@@ -21,7 +21,7 @@ public class TestEvaluator {
 	public static TestResult getTestResults(TestSheet test, AnswerSheet answers) {
 		TestResult result = new TestResult();
 		
-		Map<Metadata.Type, Integer> data = new HashMap<Metadata.Type, Integer>(); 
+		Map<Metadata.Type, Long> data = new HashMap<Metadata.Type, Long>(); 
 
 		List<QuestionAnswers> acceptedAnswers = answers.getAcceptedAnswers();
 		for (QuestionAnswers answer : acceptedAnswers) {
@@ -42,8 +42,8 @@ public class TestEvaluator {
 					Metadata.Row metadataRow = (Metadata.Row)row;
 					Metadata.Type type = metadataRow.getMetadata().getType();
 					
-					Integer value = data.get(type);
-					if (value == null) value = 0;
+					Long value = data.get(type);
+					if (value == null) value = 0l;
 					
 					value = setDigitAtDecimalPosition(value, metadataRow.getPosition(), answer.getFirstMarkedAnswerId());
 					
@@ -52,9 +52,9 @@ public class TestEvaluator {
 			}
 		}
 		
-		for (Entry<Type, Integer> values : data.entrySet()) {
-			result.setMetadataValue(values.getKey().getName(), values.getValue().toString());
-			Log.d("TestEvaluator", values.toString());
+		Long studentId = data.get(Metadata.Type.StudentId);
+		if (studentId != null) {
+			result.setStudentId(studentId);
 		}
 		
 		Log.d("TestEvaluator", result.getPoints() + " / " + result.getTotalPoints());
@@ -68,8 +68,9 @@ public class TestEvaluator {
 	 * @param digit Cyfra któr¹ ustawiæ na danej pozycji
 	 * @return Zmieniona liczba
 	 */
-	private static int setDigitAtDecimalPosition(int number, int position, int digit) {
-		int pow = 1, add = 0;
+	private static long setDigitAtDecimalPosition(long number, int position, int digit) {
+		int pow = 1;
+		long add = 0;
 		for (int i = 0; i <= position; i ++) {
 			if (i == position) {
 				add = pow * digit + number % pow;

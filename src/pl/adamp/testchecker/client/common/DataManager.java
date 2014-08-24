@@ -2,7 +2,9 @@ package pl.adamp.testchecker.client.common;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import pl.adamp.testchecker.client.common.DBHelper.Reader;
 import pl.adamp.testchecker.client.common.DBHelper.RowReader;
@@ -52,7 +54,6 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 						Question q = questionsById.get(questionId);
 						if (q == null) {
 							q = new Question(r.getInt("Id"), r.getString("Text"), r.getInt("Value"));
-							q.setCategoryId(r.getInt("QuestionCategoryId", -1));
 							questionsById.put(questionId, q);
 							result.add(q);
 						}
@@ -112,6 +113,57 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 				});
 		return result;
 	}
+	
+	/**
+	 * Funkcja zapisuje odpowiedzi do pytania
+	 * @param question Pytanie w którym dokonywano modyfikacji
+	 * @return True jeœli aktualizacja bazy siê powiod³a
+	 */
+	public boolean saveAnswers(Question question) {
+		Set<Answer> oldAnswers = new HashSet<Answer>(getAnswers(question)); // pytania z bazy danych
+		for (Answer answer : question.getAnswers()) {
+			answer = saveAnswer(question, answer);
+			if (answer == null)
+				return false;
+			oldAnswers.remove(answer);
+		}
+
+		// usuñ pytania które by³y w bazie danych ale nie by³y w liœcie
+		for (Answer answer : oldAnswers) {
+			if (deleteAnswer(answer) == false)
+				return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Funkcja dodaje lub aktualizuje odpowiedŸ
+	 * @param question Pytanie do którego nale¿y odpowiedŸ
+	 * @param answer Pytanie do zapisu
+	 * @return Instancja odpowiedzi uzupe³niona o identyfikator lub NULL w przypadku b³êdu
+	 */
+	public Answer saveAnswer(Question question, Answer answer) {
+		ContentValues values = new ContentValues();
+		values.put("Text", answer.getText());
+		values.put("IsCorrect", answer.isCorrect() ? 1 : 0);
+		values.put("QuestionId", question.getId());
+		int answerId = answer.getId();
+		if (answerId >= 0) {
+			int updatedRows = db.update("Answers", values, "Id = ?", vals(answerId));
+			
+			if (updatedRows == 1)
+				return answer;
+		} else {
+			int id = (int)db.insert("Answers", values);
+			
+			if (id >= 0) {
+				answer.setId(id);
+				return answer;
+			}
+		}
+		return null;
+	}
 
 	/**
 	 * Zwraca listê pytañ w danej kategorii
@@ -161,15 +213,17 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 				});
 		QuestionCategory defaultCategory = QuestionCategory.DefaultCategory;
 		defaultCategory.setQuestionsInflater(this);
-
-		return result[0];	
+		return result[0];
 	}
 	
 	/**
-	 * Funkcja dodaje lub aktualizuje pytanie
+	 * Funkcja dodaje lub aktualizuje pytanie.
+	 * <p>
+	 * Odpowiedzi do pytania nie s¹ zapisywane. Aby zapisaæ odpowiedzi wywo³aj {@link #saveAnswers(Question)}
 	 * @param question	Pytanie do zapisania
 	 * @param questionCategory	Kategoria do której ma nale¿eæ pytanie
 	 * @return Instancja pytania uzupe³niona o identyfikator lub NULL w przypadku b³êdu
+	 * @see #saveAnswers(Question)
 	 */
 	public Question saveQuestion(Question question, QuestionCategory questionCategory) {
 		ContentValues values = new ContentValues();
@@ -203,6 +257,15 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 	}
 
 	/**
+	 * Usuwa odpowiedŸ z pytania
+	 * @param answer OdpowiedŸ do usuniêcia
+	 * @return True jeœli usuwanie siê powiod³o
+	 */
+	public boolean deleteAnswer(Answer answer) {
+		return db.delete("Answers", "Id = ?", vals(answer.getId())) == 1;
+	}
+
+	/**
 	 * Funkcja dodaje lub aktualizuje kategoriê
 	 * @param questionCategory Kategoria do zapisania
 	 * @return Instancja kategorii uzupe³niona o identyfikator lub NULL w przypadku b³êdu
@@ -233,7 +296,7 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 	public List<TestDefinition> getTests() {
 		final List<TestDefinition> result = new ArrayList<TestDefinition>();
 
-		db.select(new String[] { "Id", "Name", "ModifyDate", "QuestionsCount", "ShuffleQuestions", "ShuffleAnswers" },
+		db.select(new String[] { "Id", "Name", "ModifyDate", "QuestionsCount", "ShuffleQuestions", "ShuffleAnswers", "Printed", "StudentIdLength" },
 				"Tests", // FROM
 				null, null, // WHERE
 				"ModifyDate DESC", // ORDER BY
@@ -244,11 +307,43 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 						test.setQuestionsCount(r.getInt("QuestionsCount"));
 						test.shuffleQuestions(r.getBool("ShuffleQuestions"));
 						test.shuffleAnswers(r.getBool("ShuffleAnswers"));
+						test.printed(r.getBool("Printed"));
+						test.setStudentIdLength(r.getInt("StudentIdLength"));
+						test.setQuestionInflater(instance);
 						result.add(test);
 					}
 				});
 		
 		return result;
+	}
+	
+	/**
+	 * Zwraca test o danym identyfikatorze (NULL w przypadku b³êdu)
+	 * @param id Identyfikator testu
+	 * @return Instancja testu
+	 */
+	public TestDefinition getTest(int id) {
+		final TestDefinition[] result = new TestDefinition[] { null };
+
+		db.select(new String[] { "Id", "Name", "ModifyDate", "QuestionsCount", "ShuffleQuestions", "ShuffleAnswers", "Printed", "StudentIdLength" },
+				"Tests", // FROM
+				"Id = ?", vals(id), // WHERE
+				null, // ORDER BY
+				new RowReader() {
+					public void readRow(Reader r) {
+						TestDefinition test = new TestDefinition(r.getInt("Id"), r.getString("Name"));
+						test.setModifyDate(new Date(1000L * r.getInt("ModifyDate")));
+						test.setQuestionsCount(r.getInt("QuestionsCount"));
+						test.shuffleQuestions(r.getBool("ShuffleQuestions"));
+						test.shuffleAnswers(r.getBool("ShuffleAnswers"));
+						test.printed(r.getBool("Printed"));
+						test.setStudentIdLength(r.getInt("StudentIdLength"));
+						test.setQuestionInflater(instance);
+						result[0] = test;
+					}
+				});
+		
+		return result[0];
 	}
 	
 	/**
@@ -263,6 +358,8 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		values.put("ShuffleQuestions", test.getShuffleQuestions() ? 1 : 0);
 		values.put("ShuffleAnswers", test.getShuffleAnswers() ? 1 : 0);
 		values.put("ModifyDate", System.currentTimeMillis() / 1000);
+		values.put("Printed", test.beenPrinted() ? 1 : 0);
+		values.put("StudentIdLength", test.getStudentIdLength());
 		if (test.getId() >= 0) {
 			int updatedRows = db.update("Tests", values, "Id = ?", vals(test.getId()));
 			

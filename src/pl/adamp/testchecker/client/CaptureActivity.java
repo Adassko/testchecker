@@ -61,16 +61,17 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import pl.adamp.testchecker.client.history.HistoryActivity;
-import pl.adamp.testchecker.client.history.HistoryItem;
-import pl.adamp.testchecker.client.history.HistoryManager;
+import pl.adamp.testchecker.client.common.DataManager;
 import pl.adamp.testchecker.client.result.ResultButtonListener;
 import pl.adamp.testchecker.client.result.ResultHandler;
 import pl.adamp.testchecker.client.result.ResultHandlerFactory;
 import pl.adamp.testchecker.client.share.ShareActivity;
 import pl.adamp.testchecker.client.test.TestEvaluator;
 import pl.adamp.testchecker.test.TestDecoderResult;
+import pl.adamp.testchecker.test.entities.TestDefinition;
 import pl.adamp.testchecker.test.entities.TestSheet;
 
 /**
@@ -85,7 +86,7 @@ import pl.adamp.testchecker.test.entities.TestSheet;
 public final class CaptureActivity extends Activity implements
 		SurfaceHolder.Callback {
 
-	private TestSheet currentTestSheet = null;
+	private volatile TestSheet currentTestSheet = null;
 	
 	private static final String TAG = CaptureActivity.class.getSimpleName();
 
@@ -109,9 +110,9 @@ public final class CaptureActivity extends Activity implements
 	private Collection<BarcodeFormat> decodeFormats;
 	private Map<DecodeHintType, ?> decodeHints;
 	private String characterSet;
-	private HistoryManager historyManager;
 	private InactivityTimer inactivityTimer;
 	private BeepManager beepManager;
+	private TestDefinition currentTestDefinition;
 
 	TestSheet getCurrentTestSheet() {
 		return currentTestSheet;
@@ -141,14 +142,12 @@ public final class CaptureActivity extends Activity implements
 		actionBar.setDisplayHomeAsUpEnabled(true);
 
 		hasSurface = false;
-		historyManager = new HistoryManager(this);
-		historyManager.trimHistory();
 		inactivityTimer = new InactivityTimer(this);
 		beepManager = new BeepManager(this);
 
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 		
-		currentTestSheet = TestSheet.getSampleInstance();
+		currentTestSheet = null;
 	}
 
 	@Override
@@ -193,6 +192,7 @@ public final class CaptureActivity extends Activity implements
 
 		decodeFormats = new ArrayList<BarcodeFormat>();
 		decodeFormats.add(BarcodeFormat.TEST);
+		decodeFormats.add(BarcodeFormat.CODE_128);
 		characterSet = null;
 	}
 
@@ -280,10 +280,6 @@ public final class CaptureActivity extends Activity implements
 			intent.setClassName(this, ShareActivity.class.getName());
 			startActivity(intent);
 			break;
-		case R.id.menu_history:
-			intent.setClassName(this, HistoryActivity.class.getName());
-			startActivityForResult(intent, HISTORY_REQUEST_CODE);
-			break;
 		case R.id.menu_settings:
 			intent.setClassName(this, PreferencesActivity.class.getName());
 			startActivity(intent);
@@ -292,21 +288,6 @@ public final class CaptureActivity extends Activity implements
 			return super.onOptionsItemSelected(item);
 		}
 		return true;
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		if (resultCode == RESULT_OK) {
-			if (requestCode == HISTORY_REQUEST_CODE) {
-				int itemNumber = intent.getIntExtra(
-						Intents.History.ITEM_NUMBER, -1);
-				if (itemNumber >= 0) {
-					HistoryItem historyItem = historyManager
-							.buildHistoryItem(itemNumber);
-					decodeOrStoreSavedBitmap(null, historyItem.getResult());
-				}
-			}
-		}
 	}
 
 	private void decodeOrStoreSavedBitmap(Bitmap bitmap, Result result) {
@@ -371,12 +352,38 @@ public final class CaptureActivity extends Activity implements
 			TestEvaluator.getTestResults(getCurrentTestSheet(), result.getAnswers());
 		}
 		
+		if (rawResult.getBarcodeFormat() == BarcodeFormat.CODE_128) {
+			String text = rawResult.getText();
+			Pattern pattern = Pattern.compile("^t(\\d+)/(\\d+)$");
+			Matcher matcher = pattern.matcher(text);
+			if (matcher.find()) {
+				try {
+					int testId = Integer.parseInt(matcher.group(1));
+					int testVariant = Integer.parseInt(matcher.group(2));
+					if (testVariant < 1) return;
+
+					if (currentTestDefinition == null || currentTestDefinition.getId() != testId)
+						currentTestDefinition = new DataManager(this).getTest(testId);
+
+					if (currentTestSheet == null || currentTestSheet.getVariant() != testVariant) {
+						currentTestSheet = currentTestDefinition.getTestSheet(testVariant);
+						Toast.makeText(this, currentTestSheet.getName(), Toast.LENGTH_LONG).show();
+					}
+					viewfinderView.clearView();
+				}
+				catch (NumberFormatException | NullPointerException e) {
+					Log.d(TAG, e.toString());
+				}
+			}
+			restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
+			return;
+		}
+		
 		ResultHandler resultHandler = ResultHandlerFactory.makeResultHandler(
 				this, rawResult);
 
 		boolean fromLiveScan = barcode != null;
 		if (fromLiveScan) {
-			historyManager.addHistoryItem(rawResult, resultHandler);
 			// Then not from history, so beep/vibrate and we have an image to
 			// draw on
 			beepManager.playBeepSoundAndVibrate();
@@ -526,10 +533,10 @@ public final class CaptureActivity extends Activity implements
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_UP) {
+		/*if (event.getAction() == MotionEvent.ACTION_UP) {
 			currentTestSheet = TestSheet.getSampleInstance();
 			viewfinderView.clearView();
-		}
+		}*/
 
 		return super.onTouchEvent(event);
 	}

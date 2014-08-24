@@ -85,16 +85,6 @@
             android:stateNotNeeded="true" >
         </activity>
         <activity
-            android:name="pl.adamp.testchecker.client.history.HistoryActivity"
-            android:label="@string/history_title"
-            android:stateNotNeeded="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name="pl.adamp.testchecker.client.HelpActivity"
             android:screenOrientation="user" >
             <intent-filter>
@@ -108,7 +98,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:stateNotNeeded="true"
-            android:theme="@style/CaptureTheme" >
+            android:theme="@style/FullScreen" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -119,18 +109,29 @@
             android:name="pl.adamp.testchecker.client.CreateTestActivity"
             android:label="@string/title_activity_create_test"
             android:parentActivityName="pl.adamp.testchecker.client.MainActivity"
-            android:windowSoftInputMode="adjustPan" >
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:theme="@style/FullScreen" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="pl.adamp.testchecker.client.MainActivity" />
         </activity>
         <activity
             android:name="pl.adamp.testchecker.client.TestResultsActivity"
-            android:label="@string/title_activity_test_results" >
+            android:label="@string/title_activity_test_results"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:theme="@style/FullScreen" >
         </activity>
         <activity
             android:name="pl.adamp.testchecker.client.QuestionEditActivity"
-            android:label="@string/title_activity_question_edit" >
+            android:label="@string/title_activity_question_edit"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:theme="@style/FullScreen" >
         </activity>
     </application>
 

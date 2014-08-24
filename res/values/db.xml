@@ -12,7 +12,9 @@ CREATE TABLE Tests (
     ShuffleQuestions INTEGER(1),
     ShuffleAnswers INTEGER(1),
     QuestionsCount INTEGER,
-    ModifyDate INTEGER(4)
+    ModifyDate INTEGER(4),
+    Printed INTEGER(1),
+    StudentIdLength INTEGER(1)
 );
 CREATE INDEX id_tests_createdate ON Tests (ModifyDate DESC);
 

@@ -2,7 +2,7 @@ package pl.adamp.testchecker.test.entities;
 
 import java.io.Serializable;
 
-public class Answer implements Serializable, HasId {
+public class Answer implements Serializable, Listable {
 	private static final long serialVersionUID = 2642447049129762178L;
 
 	private String text;
@@ -11,6 +11,10 @@ public class Answer implements Serializable, HasId {
 	
 	public String getText() {
 		return text;
+	}
+	
+	public void setText(String text) {
+		this.text = text;
 	}
 
 	public boolean isCorrect() {
@@ -41,12 +45,17 @@ public class Answer implements Serializable, HasId {
 	
 	@Override
 	public int hashCode() {
-		return this.text.hashCode();
+		return id;
 	}
 	
 	@Override
-	public boolean equals(Object other) {
-		return this.text.equals(other);
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (o instanceof Answer == false)
+			return false;
+		Answer other = (Answer)o;
+		return this.id == other.id;
 	}
 	
 	@Override

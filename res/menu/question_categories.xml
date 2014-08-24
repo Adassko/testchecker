@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:id="@+id/menu_questioncategory_selectall"
+      android:icon="@android:drawable/ic_menu_add"
+      android:orderInCategory="1"
+      android:title="@string/menu_questioncategory_selectall"
+      android:showAsAction="withText|ifRoom" />
   <item android:id="@+id/menu_questioncategory_editname"
         android:title="@string/menu_questioncategory_editname"
         android:icon="@android:drawable/ic_menu_edit"
-        android:orderInCategory="1"
+        android:orderInCategory="2"
         android:showAsAction="withText|ifRoom"/>
   <item android:id="@+id/menu_questioncategory_remove"
         android:title="@string/menu_questioncategory_remove"
         android:icon="@android:drawable/ic_menu_delete"
-        android:orderInCategory="2"
+        android:orderInCategory="3"
         android:showAsAction="withText|ifRoom"/>
 </menu>

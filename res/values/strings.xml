@@ -15,8 +15,26 @@
  limitations under the License.
 -->
 <resources>
+    <string name="msg_edit_not_safe">Editing may void any previously printed test sheets. Are you sure?</string>
+    <string name="msg_new_test">New test</string>
+    <string name="msg_new_test_name">New test name</string>
+    <string name="msg_cannot_create_test">Error while creating test</string>
+    <string name="msg_no_correct_answer">No answer is marked as correct. Do you want to save anyway?</string>
+    <string name="warning">Warning</string>
+    <string name="selected_count">Selected questions:</string>
+    <string name="button_addanswer">Add answer</string>
+    <string name="new_category">New category&#8230;</string>
+    <string name="edit_category">Edit category&#8230;</string>
+    <string name="edit_answer">Edit answer&#8230;</string>
+    <string name="remove_answer">Remove answer</string>
+    <string name="new_category_name">New category name</string>
+    <string name="msg_saveerror">Error occurred while saving your changes. Try again</string>
+    <string name="menu_questioncategory_selectall">Select all</string>
+    <string name="msg_update_category_name">Update category name</string>
+    <string name="msg_new_category_name">New category name</string>
     <string name="empty_text">Empty</string>
 	<string name="new_question">New question</string>
+    <string name="answer_text">The answer</string>
     <string name="app_name">Tests</string>
     <string name="app_picker_name">Applications</string>
     <string name="bookmark_picker_name">Bookmarks</string>
@@ -69,6 +87,8 @@
     <string name="menu_share">Share</string>
     <string name="menu_questions_edit">Edit question&#8230;</string>
     <string name="menu_questions_remove">Remove question</string>
+    <string name="menu_answer_edit">Edit answer&#8230;</string>
+    <string name="menu_answer_remove">Remove answer</string>
     <string name="menu_questioncategory_editname">Edit name&#8230;</string>
     <string name="menu_questioncategory_remove">Remove category</string>
     <string name="no_category">No category</string>
@@ -147,18 +167,24 @@
     <string name="wifi_ssid_label">Network Name</string>
     <string name="wifi_type_label">Type</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="button_settings">Settings</string>
     <string name="title_activity_create_test">Create new test</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_test_results">Test results</string>
-    <string name="title_activity_question_edit">QuestionEditActivity</string>
+    <string name="title_activity_question_edit">Question edit</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="question_text">Question text</string>
-    <string name="question_value">Question value</string>
+    <string name="question_value">Question value (points)</string>
     <string name="answer">Answer</string>
+    <string name="button_next">Next\u00bb</string>
+    <string name="switch_shuffle_answers">Shuffle answers</string>
+    <string name="shuffle_questions">Shuffle questions</string>
+    <string name="button_generate">Generate</string>
+    <string name="button_results">Results</string>
+    <string name="questions_count">No. of questions on test</string>
+    <string name="variants">Number of variants</string>
+    <string name="id_length">Length of student ID</string>
 
 </resources>

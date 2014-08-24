@@ -5,7 +5,7 @@ import java.util.List;
 
 import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 
-public class QuestionCategory implements HasId {
+public class QuestionCategory implements Listable {
 	public static final QuestionCategory DefaultCategory = new NullObject();
 	
 	private int id;
@@ -35,6 +35,7 @@ public class QuestionCategory implements HasId {
 	
 	public void setQuestionsInflater(QuestionsInflater inflater) {
 		this.questionsInflater = inflater;
+		invalidateQuestions();
 	}
 	
 	public QuestionCategory(String name) {
@@ -66,12 +67,10 @@ public class QuestionCategory implements HasId {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj instanceof QuestionCategory) {
-			QuestionCategory other = (QuestionCategory) obj;
-			if (id != other.id)
-				return false;
-		}
-		return false;
+		if (obj instanceof QuestionCategory == false)
+			return false;
+		QuestionCategory other = (QuestionCategory) obj;
+		return id == other.id;
 	}
 
 	@Override
@@ -79,7 +78,7 @@ public class QuestionCategory implements HasId {
 		return name;
 	}
 	
-	private static class NullObject extends QuestionCategory
+	public static class NullObject extends QuestionCategory
 	{
 		NullObject() {
 			super(-1, "");

@@ -17,8 +17,26 @@
 
 -->
 <resources>
+    <string name="msg_edit_not_safe">Edycja może spowodować unieważnienie wszystkich wcześniej wydrukowanych testów. Chcesz kontynuować?</string>
+    <string name="msg_new_test">Nowy test</string>
+    <string name="msg_new_test_name">Nazwa testu</string>
+    <string name="msg_cannot_create_test">Wystąpił błąd przy tworzeniu testu</string>
+    <string name="msg_update_category_name">Zmień nazwę kategorii</string>
+    <string name="msg_new_category_name">Nowa nazwa kategorii</string>
+    <string name="msg_no_correct_answer">Nie zaznaczono poprawnej odpowiedzi. Czy na pewno chcesz kontynuować?</string>
+    <string name="warning">Ostrzeżenie</string>
+    <string name="selected_count">Zaznaczonych pytań:</string>
+    <string name="edit_answer">Edytuj odpowiedź&#8230;</string>
+    <string name="remove_answer">Usuń odpowiedź</string>
+    <string name="button_addanswer">Dodaj odpowiedź</string>
+    <string name="new_category">Nowa kategoria&#8230;</string>
+    <string name="edit_category">Edycja kategorii&#8230;</string>
+    <string name="new_category_name">Nowa nazwa kategorii</string>
+    <string name="msg_saveerror">Wystąpił błąd podczas zapisu. Spróbuj jeszcze raz</string>
+    <string name="menu_questioncategory_selectall">Zaznacz wszystkie</string>
     <string name="empty_text">Pusto</string>
     <string name="new_question">Nowe pytanie</string>
+    <string name="answer_text">Treść odpowiedzi</string>
     <string name="app_name">Testy</string>
     <string name="app_picker_name">Aplikacje</string>
     <string name="bookmark_picker_name">Zakładki</string>
@@ -70,6 +88,8 @@
     <string name="menu_questions_remove">Usuń pytanie</string>
     <string name="menu_questioncategory_editname">Edytuj nazwę&#8230;</string>
     <string name="menu_questioncategory_remove">Usuń kategorię</string>
+    <string name="menu_answer_edit">Edytuj odpowiedź&#8230;</string>
+    <string name="menu_answer_remove">Usuń odpowiedź</string>
 	<string name="no_category">Brak kategorii</string>
     <string name="msg_bulk_mode_scanned">Tryb zbiorczy: skanowanie i zapisywanie kodów kreskowych w trybie ciągłym</string>
     <string name="msg_camera_framework_bug">Przepraszamy, aparat Android napotkał problem. Może wystąpić potrzeba ponownego uruchomienia urządzenia.</string>
@@ -129,7 +149,7 @@
     <string name="preferences_try_bsplus">Wypróbuj Barcode Scanner+</string>
     <string name="preferences_try_bsplus_summary">Wzbogacony o nowe funkcje i interfejs</string>
     <string name="preferences_vibrate_title">Wibruj</string>
-        <string name="press_back_twice">Naciśnij dwa razy aby wrócić</string>
+    <string name="press_back_twice">Naciśnij dwa razy aby wrócić</string>
     <string name="result_address_book">Znaleziono dane kontaktu</string>
     <string name="result_calendar">Znaleziono wydarzenie z kalendarza</string>
     <string name="result_email_address">Znaleziono adres email</string>
@@ -145,10 +165,19 @@
     <string name="wifi_changing_network">Ubiegającymi się o przyłączenie do sieci\u2026</string>
     <string name="wifi_ssid_label">Nazwa sieci</string>
     <string name="wifi_type_label">Typ</string>
+    <string name="title_activity_test_results">Wyniki testu</string>
+    <string name="title_activity_question_edit">Edycja pytania</string>
     <string name="save">Zapisz</string>
     <string name="cancel">Anuluj</string>
     <string name="question_text">Treść pytania</string>
-    <string name="question_value">Wartość pytania</string>
+    <string name="question_value">Wartość pytania (pkt)</string>
     <string name="answer">Odpowiedź</string>
-
+    <string name="button_next">Dalej\u00bb</string>
+    <string name="switch_shuffle_answers">Mieszaj odpowiedzi</string>
+    <string name="shuffle_questions">Mieszaj pytania</string>
+    <string name="button_generate">Generuj</string>
+    <string name="button_results">Wyniki</string>
+    <string name="questions_count">Liczba pytań na teście</string>
+    <string name="variants">Liczba wariantów</string>
+    <string name="id_length">Długość ID ucznia</string>
 </resources>

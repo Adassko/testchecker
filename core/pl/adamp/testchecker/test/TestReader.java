@@ -50,7 +50,7 @@ public class TestReader implements Reader {
 	private static final int MAX_AVG_VARIANCE = 34;
 	private final String TAG = TestReader.class.getName();
 	
-	static final int[][] LOWER_PATTERNS = {
+	/*static final int[][] LOWER_PATTERNS = {
 		{1, 1, 2, 1, 2}, // 0
 	    {1, 2, 2, 1, 2},
 	    //{1, 2, 2, 2, 2},
@@ -61,7 +61,7 @@ public class TestReader implements Reader {
 	    {1, 2, 2, 1, 1},
 	    {1, 1, 1, 3, 2}, 
 	    {1, 3, 1, 1, 2}
-	};
+	};*/
 	
 	static final int[][] CODE_PATTERNS = {
 	      {1, 2, 1, 2, 2, 2, 2}, // 0
@@ -125,6 +125,15 @@ public class TestReader implements Reader {
 	      {1, 3, 1, 2, 3, 1, 1},
 	      {1, 3, 3, 2, 1, 1, 1}
 	};
+	
+	public static int[] getUpperCodePattern(int code) {
+		return CODE_PATTERNS[code % MAX_TEST_ROWS];
+	}
+	
+	public static int[] getLowerCodePattern(int code) {
+		return CODE_PATTERNS[code % MAX_TEST_ROWS];
+//		return LOWER_PATTERNS[code % LOWER_PATTERNS.length];
+	}
 	
 	public static final int MAX_TEST_ROWS = CODE_PATTERNS.length;
 	
@@ -286,7 +295,7 @@ public class TestReader implements Reader {
 		return result;
 	}
 	
-	List<Marker> clearList(List<Marker> markers) {
+	List<Marker> neatList(List<Marker> markers) {
 		return averageMarkersPositions(rejectOddResults(markers));
 	}
 	
@@ -307,13 +316,13 @@ public class TestReader implements Reader {
 			catch (NotFoundException ex) { }
 			column.reverse();
 			try {
-				Marker marker = findPatternOnColumn(column, x, LOWER_PATTERNS, true, limit);
+				Marker marker = findPatternOnColumn(column, x, /*LOWER_PATTERNS*/ CODE_PATTERNS, true, limit);
 				lowerMarkers.add(marker);
 			}
 			catch (NotFoundException ex) { }
 		}
 		
-		return matchMarkers(clearList(upperMarkers), clearList(lowerMarkers));
+		return matchMarkers(neatList(upperMarkers), neatList(lowerMarkers));
 	}
 	
 	List<TestRegion> matchMarkers(List<Marker> upperMarkers, List<Marker> lowerMarkers) {
@@ -332,7 +341,7 @@ public class TestReader implements Reader {
 					continue;
 				}
 				
-				if (upper.getCode() % LOWER_PATTERNS.length == lower.getCode()
+				if (upper.getCode() % /*LOWER_PATTERNS.length*/ MAX_TEST_ROWS == lower.getCode()
 						&& upper.getCode() < currentTestSheet.getTestRowsCount()) {
 					TestRegion region = new TestRegion(upper.getCode(), upper.getPosition(), lower.getPosition());
 					
@@ -365,6 +374,8 @@ public class TestReader implements Reader {
 		int cX = (int)center.getX();
 		int cY = (int)center.getY();
 		int r = (int)range;
+		int minusR = Math.max(0, cY - r);
+		int plusR = Math.min(matrix.getHeight() - 1, cY + r);
 		
 		int checked = 0;
 /*		for (int x = cX - r; x < cX + r; x ++) {
@@ -375,7 +386,7 @@ public class TestReader implements Reader {
 		}*/
 		
 		// TODO: zaimplementowaæ algorytm Bresenhama
-		for (int y = cY - r; y < cY + r; y ++) {
+		for (int y = minusR; y < plusR; y ++) {
 			if (y != cY && matrix.get(cX, y)) {
 				checked ++;
 				if (checked > 3) return true;
@@ -392,10 +403,14 @@ public class TestReader implements Reader {
 		float halfBoxHeight = boxHeight / 2;
 		
 		int testSheetRowCount = currentTestSheet.getTestRowsCount();
+		Log.d(TAG, "TestSheetRowCount: " + testSheetRowCount);
 		
 		for (TestRegion region : testRegions) {
 			int rowId = region.getRegionCode();
-			if (rowId >= testSheetRowCount) continue;
+			if (rowId >= testSheetRowCount) {
+				Log.d(TAG, "Za duzy kod: " + rowId);
+				continue;
+			}
 			
 			TestRow testRow = currentTestSheet.getTestRow(rowId);
 			
@@ -408,10 +423,13 @@ public class TestReader implements Reader {
 				float boxY = margin + i * boxAreaHeight + halfBoxAreaHeight;
 				float dpp = ResultPoint.distance(region.getUpperPoint(), region.getLowerPoint()) / totalHeight;
 				ResultPoint center = ResultPoint.lerp(region.getUpperPoint(), region.getLowerPoint(), boxY / totalHeight);
-				center.setColor(Color.BLUE);
 				
 				if (isTicked(matrix, center, halfBoxHeight * dpp)) {
 					result.addMarkedAnswer(i);
+					center.setColor(Color.BLACK);
+					resultPointCallback.foundPossibleResultPoint(center);
+				} else {
+					center.setColor(Color.WHITE);
 					resultPointCallback.foundPossibleResultPoint(center);
 				}
 			}
@@ -464,16 +482,17 @@ public class TestReader implements Reader {
 			currentTestSheet = testSheet;
 		}
 		
-		if (currentTestSheet == null || answerSheet == null)
+		if (currentTestSheet == null || answerSheet == null) {
 			throw NotFoundException.getNotFoundInstance();
+		}
 
 		BitMatrix matrix = image.getBlackMatrix();
 		
 		List<TestRegion> testRegions = detectTestRegions(matrix);
-		if (testRegions.size() > 2) {
+		/*if (testRegions.size() > 2) {
 			testResultCallback.foundArea(
 					new TestArea(testRegions.get(0), testRegions.get(testRegions.size() - 1), testRegions.size()));
-		}
+		}*/
 		
 		detectGivenAnswers(matrix, testRegions);
 		

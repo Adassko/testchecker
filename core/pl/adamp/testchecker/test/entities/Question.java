@@ -6,13 +6,12 @@ import java.util.List;
 import pl.adamp.testchecker.test.TestRow;
 import pl.adamp.testchecker.test.interfaces.AnswersInflater;
 
-public class Question extends TestRow implements HasId {
+public class Question extends TestRow implements Listable {
 	private static final long serialVersionUID = 1098464872533403480L;
 	private String question;
 	private List<Answer> answers;
 	private int value;
 	private int id;
-	private int categoryId;
 	private AnswersInflater inflater;
 	
 	public Question(String question) {
@@ -26,14 +25,6 @@ public class Question extends TestRow implements HasId {
 		this.value = value;
 	}
 	
-	public void setCategoryId(int categoryId) {
-		this.categoryId = categoryId;
-	}
-	
-	public int getCategoryId() {
-		return this.categoryId;
-	}
-	
 	public void setAnswersInflater(AnswersInflater inflater) {
 		this.inflater = inflater;
 	}
@@ -44,7 +35,9 @@ public class Question extends TestRow implements HasId {
 	 */
 	public Question(Question source) {
 		this(source.id, source.question, source.value);
-		answers.addAll(source.getAnswers());
+		answers.addAll(source.answers);
+		this.inflater = source.inflater;
+		this.reservedSpaceSize = source.reservedSpaceSize;		
 	}
 	
 	public int getId() {
@@ -57,6 +50,9 @@ public class Question extends TestRow implements HasId {
 	
 	public Answer addAnswer(Answer answer) {
 		answers.add(answer);
+		if (reservedSpaceSize < answers.size()) {
+			reservedSpaceSize = answers.size();
+		}
 		return answer;
 	}
 	
@@ -76,6 +72,10 @@ public class Question extends TestRow implements HasId {
 		return question;
 	}
 	
+	public void setQuestion(String question) {
+		this.question = question;
+	}
+	
 	public int getValue() {
 		return value;
 	}
@@ -85,7 +85,7 @@ public class Question extends TestRow implements HasId {
 	}
 
 	public List<Answer> getAnswers() {
-		if (inflater != null && answers.size() == 0) {
+		if (inflater != null && this.id >= 0 && answers.size() == 0) {
 			answers = inflater.getAnswers(this);
 		}
 		return answers;
@@ -93,7 +93,7 @@ public class Question extends TestRow implements HasId {
 	
 	@Override
 	public int getAnswersCount() {
-		return answers.size();
+		return getAnswers().size();
 	}
 	
 	@Override

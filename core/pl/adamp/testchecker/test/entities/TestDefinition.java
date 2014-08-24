@@ -14,7 +14,7 @@ import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 import android.util.Pair;
 import android.util.SparseArray;
 
-public class TestDefinition implements Serializable, HasId {
+public class TestDefinition implements Serializable, Listable {
 	private static final long serialVersionUID = -2301572555540307633L;
 
 	private List<Question> questions;
@@ -26,6 +26,7 @@ public class TestDefinition implements Serializable, HasId {
 	private int id;
 	private int questionsCount = -1;
 	private Date modifyDate;
+	private boolean printed;
 
 	public TestDefinition(String name) {
 		this(-1, name);
@@ -45,6 +46,35 @@ public class TestDefinition implements Serializable, HasId {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * Ustaw d³ugoœæ identyfikatora studenta na teœcie
+	 */
+	public void setStudentIdLength(int length) {
+		this.studentIdLength = length;
+	}
+	
+	/**
+	 * D³ugoœæ identyfikatora studenta na teœcie
+	 */
+	public int getStudentIdLength() {
+		return studentIdLength;
+	}
+	
+	/**
+	 * Ustawia czy test zosta³ ju¿ wydrukowany i nie powinien ju¿ byæ edytowany
+	 */
+	public void printed(boolean value) {
+		this.printed = value;
+	}
+
+	/**
+	 * Sprawdza czy test ju¿ zosta³ wydrukowany i nie powinien byæ edytowany
+	 * @return True jeœli test zosta³ ju¿ wydrukowany
+	 */
+	public boolean beenPrinted() {
+		return this.printed;
 	}
 	
 	/**
@@ -84,6 +114,14 @@ public class TestDefinition implements Serializable, HasId {
 		}
 		
 		return questions;
+	}
+	
+	/**
+	 * Ustawia obiekt który mo¿e potrafi pobraæ listê odpowiedzi dla tego testu 
+	 * @param inflater Obiekt nape³niaj¹cy
+	 */
+	public void setQuestionInflater(QuestionsInflater inflater) {
+		this.questionInflater = inflater;
 	}
 	
 	/**
@@ -153,19 +191,22 @@ public class TestDefinition implements Serializable, HasId {
 		
 		List<Question> questions = new ArrayList<Question>(this.getQuestions());
 		
-		if (shuffleQuestions)
-			Collections.shuffle(questions, randomGenerator); // przetasuj pytania
-		
 		int count = this.questionsCount;
 		int availableCount = questions.size();
 		if (count < 0 || count > availableCount)
 			count = availableCount; // jeœli nie ustalono liczby pytañ w teœcie, pobierz wszystkie pytania
-		
+
+		int firstAnswerId = 0;
+		if (shuffleQuestions) {
+			Collections.shuffle(questions, randomGenerator); // przetasuj pytania
+		} else {
+			firstAnswerId = count * (variant - 1); // zacznij od n-tego pytania
+		}
+				
 		int maxAnswersCount = 0;
-		for (int i = 0; i < count; i ++) {
-			Question question = new Question(questions.get(i)); // sklonuj pytanie przed modyfikacjami
+		for (int i = firstAnswerId; i < firstAnswerId + count; i ++) {
+			Question question = new Question(questions.get(i % availableCount)); // sklonuj pytanie przed modyfikacjami
 			if (shuffleAnswers) {
-				question = new Question(question);
 				Collections.shuffle(question.getAnswers(), randomGenerator);
 			}
 			result.addQuestion(question);

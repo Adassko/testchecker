@@ -103,7 +103,7 @@ public class Metadata implements Serializable {
 	}
 	
 	public enum Type {
-		StudentId("StudentId", 9);
+		StudentId("StudentId", 10);
 
 		private String name;
 		private int answersCount;

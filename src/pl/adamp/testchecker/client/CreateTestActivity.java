@@ -1,29 +1,32 @@
 package pl.adamp.testchecker.client;
 
-import java.lang.ref.WeakReference;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
+import android.os.Environment;
 import android.text.Editable;
-import android.util.Log;
-import android.util.SparseArray;
-import android.view.ActionMode;
+import android.text.TextWatcher;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,26 +35,40 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ListView;
+import pl.adamp.testchecker.client.R.array;
 import pl.adamp.testchecker.client.common.DataManager;
+import pl.adamp.testchecker.client.common.DialogHelper;
+import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
+import pl.adamp.testchecker.client.common.QuestionsFlatListAdapter;
 import pl.adamp.testchecker.client.common.QuestionsListAdapter;
+import pl.adamp.testchecker.client.common.TestPrinter;
+import pl.adamp.testchecker.client.common.TestPrinter.PaperSize;
 import pl.adamp.testchecker.client.common.TestsListAdapter;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
 import pl.adamp.testchecker.test.entities.TestDefinition;
+import pl.adamp.testchecker.test.entities.TestSheet;
 
 public class CreateTestActivity extends Activity {
+	private static final String BUNDLE_TEST_ID = "bundle_test_id";
+	
 	protected TestDefinition choosenTest;
 	private CreateTestFragment currentFragment;
 	
@@ -65,12 +82,37 @@ public class CreateTestActivity extends Activity {
 
 		if (savedInstanceState == null) {
 			setFragment(new TestChooserFragment());
+		} else {
+			if (savedInstanceState.containsKey(BUNDLE_TEST_ID)) {
+				int savedId = savedInstanceState.getInt(BUNDLE_TEST_ID);
+				choosenTest = new DataManager(this).getTest(savedId);
+			}
+				setFragment((CreateTestFragment)getFragmentManager().findFragmentByTag("main"));
 		}
 	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		if (choosenTest != null)
+			outState.putInt(BUNDLE_TEST_ID, choosenTest.getId());
+		super.onSaveInstanceState(outState);
+	}
 		
+	protected void goToPreview() {
+		setFragment(new PreviewFragment());		
+	}
+	
+	protected void goToQuestionsEdit() {
+		setFragment(new QuestionsChooserFragment());
+	}
+	
 	protected void chooseTest(TestDefinition test) {
 		choosenTest = test;
-		setFragment(new QuestionsChooserFragment());
+		if (test.beenPrinted()) {
+			goToPreview();
+		} else {
+			goToQuestionsEdit();
+		}
 	}
 	
 	protected TestDefinition getChoosenTest() {
@@ -82,7 +124,7 @@ public class CreateTestActivity extends Activity {
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 		if (currentFragment != null)
 			ft.addToBackStack(currentFragment.getName());
-		ft.replace(R.id.container, newFragment).commit();
+		ft.replace(R.id.container, newFragment, "main").commit();
 		currentFragment = newFragment;
 	}
 
@@ -146,8 +188,8 @@ public class CreateTestActivity extends Activity {
 			public void onClick(View v) {
 				final EditText input = new EditText(getActivity());
 				new AlertDialog.Builder(getActivity())
-			    .setTitle("New test")
-			    .setMessage("New test name")
+			    .setTitle(R.string.msg_new_test)
+			    .setMessage(R.string.msg_new_test_name)
 			    .setView(input)
 			    .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
 			        public void onClick(DialogInterface dialog, int whichButton) {
@@ -158,7 +200,7 @@ public class CreateTestActivity extends Activity {
 			            if (test != null) {
 			            	getTestActivity().chooseTest(test);
 			            } else {
-			            	Toast.makeText(getTestActivity(), "Error while creating test", Toast.LENGTH_LONG).show();
+			            	Toast.makeText(getTestActivity(), R.string.msg_cannot_create_test, Toast.LENGTH_LONG).show();
 			            }
 			        }
 			    }).setNegativeButton(R.string.button_cancel, null).show();
@@ -174,11 +216,25 @@ public class CreateTestActivity extends Activity {
 		List<QuestionCategory> categories;
 		Set<Question> selectedQuestions;
 		TestDefinition choosenTest;
+		TextView textView_selectedCount;
 
 		@Override
 		public void onDestroyView() {
 			unregisterForContextMenu(expListView);
 			super.onDestroyView();
+		}
+		
+		
+		private void reloadCategories() {
+			categories.clear();
+			for (QuestionCategory category : getDataManager().getQuestionCategories()) {
+				categories.add(category);
+			}
+			listAdapter.notifyDataSetInvalidated();
+
+			if (categories.size() == 1) {
+				expListView.expandGroup(0);
+			}
 		}
 		
 		@Override
@@ -189,23 +245,23 @@ public class CreateTestActivity extends Activity {
 			View rootView = inflater.inflate(R.layout.fragment_create_test,
 					container, false);
 
+			textView_selectedCount = (TextView)rootView.findViewById(R.id.selectedCount);
 			expListView = (ExpandableListView) rootView.findViewById(R.id.questionsList);
 			expListView.setEmptyView(inflater.inflate(R.layout.empty, null));
 			choosenTest = getTestActivity().getChoosenTest();
 
-			categories = getDataManager().getQuestionCategories();
 			selectedQuestions = new HashSet<Question>(getDataManager().getQuestions(choosenTest));
+			textView_selectedCount.setText(selectedQuestions.size() + "");
 
-			listAdapter = new QuestionsListAdapter(rootView.getContext(), categories);
+			categories = new ArrayList<QuestionCategory>();
+			listAdapter = new QuestionsListAdapter(getActivity(), categories);
 			expListView.setAdapter(listAdapter);
 			listAdapter.setSelectedCallback(new QuestionsListAdapter.SelectedCallback() {
 				public boolean isSelected(Question question) {
 					return selectedQuestions.contains(question);
 				}
 			});
-			if (categories.size() == 1) {
-				expListView.expandGroup(0);
-			}
+			reloadCategories();
 
 			registerForContextMenu(expListView);
 
@@ -215,34 +271,8 @@ public class CreateTestActivity extends Activity {
 					Object o = v.getTag(R.id.item);
 					if (o instanceof Question) {
 						Question question = (Question)o;
-						
-						if (selectedQuestions.contains(question)) {
-							if (getDataManager().unassignTestQuestion(question, choosenTest)) {
-								selectedQuestions.remove(question);
-								v.setBackgroundColor(Color.TRANSPARENT);
-							}
-						} else {
-							if (getDataManager().assignQuestionToTest(question, choosenTest)) {
-								selectedQuestions.add(question);
-								v.setBackgroundColor(getActivity().getResources().getColor(R.color.question_selected));
-							}
-						}
+						selectQuestion(question, v, !selectedQuestions.contains(question));
 						return true;
-					}
-					return false;
-				}
-			});
-			
-			
-			expListView.setOnItemLongClickListener(new OnItemLongClickListener() {
-				public boolean onItemLongClick(AdapterView<?> adapter, View v,
-						int position, long id) {
-					Object o = v.getTag(R.id.item);
-					if (o instanceof QuestionCategory) {
-						final QuestionCategory category = (QuestionCategory)o;
-					
-						if (category == QuestionCategory.DefaultCategory)
-							return true; // nie pokazuj menu kontekstowego
 					}
 					return false;
 				}
@@ -256,9 +286,55 @@ public class CreateTestActivity extends Activity {
 				}
 			});
 			
+			rootView.findViewById(R.id.button_next).setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					getTestActivity().goToPreview();
+				}
+			});
+			
 			return rootView;
 		}
+		
+		@Override
+		public void onActivityResult(int requestCode, int resultCode,
+				Intent data) {
+			if (requestCode == QUESTION_EDIT_RESULT && resultCode == RESULT_OK) {
+				int questionId = data.getIntExtra(QuestionEditActivity.QUESTION_ID, -1);
+				if (questionId >= 0) {
+					reloadCategories();
+					
+		            Question q = getDataManager().getQuestion(questionId);
+		            selectQuestion(q, null, true);
+				}				
+			}
+		}
+		
+		private void selectQuestion(Question question, View v, boolean setSelected) {
+			if (setSelected) {
+				if (getDataManager().assignQuestionToTest(question, choosenTest)) {
+					selectedQuestions.add(question);
+					if (v != null)
+						v.setBackgroundColor(getActivity().getResources().getColor(R.color.question_selected));
+				}
+			} else {
+				if (getDataManager().unassignTestQuestion(question, choosenTest)) {
+					selectedQuestions.remove(question);
+					if (v != null)
+						v.setBackgroundColor(Color.TRANSPARENT);
+				}
+			}
+			textView_selectedCount.setText(selectedQuestions.size() + "");
+		}
 
+		private Object getMenuItemContext(ContextMenuInfo info) {
+			if (info instanceof ExpandableListView.ExpandableListContextMenuInfo) {
+				View v = ((ExpandableListView.ExpandableListContextMenuInfo)info).targetView;
+				return v.getTag(R.id.item);
+			}
+			return null;
+		}
+		
 		@Override
 		public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 			inflater.inflate(R.menu.questions, menu);
@@ -284,39 +360,15 @@ public class CreateTestActivity extends Activity {
 					menu.setHeaderTitle(category.getName());
 					inflater.inflate(R.menu.question_categories, menu);
 					
-					boolean hasChildren = category.getQuestions().size() > 0;
-				    menu.findItem(R.id.menu_questioncategory_remove).setEnabled(!hasChildren);
+					boolean isEmpty = category.getQuestions().size() == 0;
+					boolean isDefault = category.equals(QuestionCategory.DefaultCategory);
+				    menu.findItem(R.id.menu_questioncategory_remove).setEnabled(isEmpty && !isDefault);
+				    menu.findItem(R.id.menu_questioncategory_editname).setEnabled(!isDefault);
 
 					return;
 				}
 			}
 			super.onCreateContextMenu(menu, v, menuInfo);
-		}
-		
-		private Object getMenuItemContext(ContextMenuInfo info) {
-			if (info instanceof ExpandableListView.ExpandableListContextMenuInfo) {
-				View view = ((ExpandableListView.ExpandableListContextMenuInfo)info).targetView;
-				return view.getTag(R.id.item);
-			}
-			return null;
-		}
-		
-		@Override
-		public void onActivityResult(int requestCode, int resultCode,
-				Intent data) {
-			if (requestCode == QUESTION_EDIT_RESULT && resultCode == RESULT_OK) {
-				int questionId = data.getIntExtra(QuestionEditActivity.QUESTION_ID, -1);
-				if (questionId >= 0) {
-					categories = getDataManager().getQuestionCategories();
-		            listAdapter.notifyDataSetInvalidated();
-		            
-		            Question q = getDataManager().getQuestion(questionId);
-		            if (selectedQuestions.contains(q)) {
-		            	selectedQuestions.add(q);
-			            getDataManager().assignQuestionToTest(q, choosenTest);
-		            }
-				}				
-			}
 		}
 		
 		@Override
@@ -355,11 +407,20 @@ public class CreateTestActivity extends Activity {
 					builder.show();
 					return true;
 					
+				case R.id.menu_questioncategory_selectall:
+					category = (QuestionCategory)itemContext;
+					for (Question q : category.getQuestions()) {
+						if (!selectedQuestions.contains(q))
+							selectQuestion(q, null, true);
+						listAdapter.notifyDataSetChanged();
+					}
+					return true;
+					
 				case R.id.menu_questioncategory_editname:
 					category = (QuestionCategory)itemContext;
 					final EditText input = new EditText(getActivity());
-				    builder.setTitle("Update category name")
-				    .setMessage("New category name")
+				    builder.setTitle(R.string.msg_update_category_name)
+				    .setMessage(R.string.msg_new_category_name)
 				    .setView(input)
 				    .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
 				        public void onClick(DialogInterface dialog, int whichButton) {
@@ -393,9 +454,238 @@ public class CreateTestActivity extends Activity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
+
+	public static class PreviewFragment extends CreateTestFragment {
+		private TestDefinition test;
+		private int generate_variants = 1;		
+		
+		@Override
+		public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+			inflater.inflate(R.menu.test_preview, menu);
+			super.onCreateOptionsMenu(menu, inflater);
+		}
+		
+		private void blockLayout(View view) {
+			final View layoutBlocker = view.findViewById(R.id.layout_blocker); 
+			layoutBlocker.setVisibility(View.VISIBLE);
+			layoutBlocker.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View arg0) {
+					DialogHelper.showDialog(getActivity(), R.string.warning, R.string.msg_edit_not_safe, new OnAcceptListener() {
+						public void onAccept(String input) {
+							layoutBlocker.setOnClickListener(null);
+							layoutBlocker.setVisibility(View.GONE);
+							test.printed(false);
+						}
+					}, false);
+				}
+			});
+
+		}
+		
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState) {
+			test = getTestActivity().getChoosenTest();
+			setName(test.getName() + " - " + " generowanie testu");
+			
+			final View rootView = inflater.inflate(R.layout.fragment_test_preview,
+					container, false);
+			setHasOptionsMenu(true);
+
+			final List<Question> questions = getDataManager().getQuestions(test);
+			QuestionsFlatListAdapter questionsAdapter = new QuestionsFlatListAdapter(getActivity(), questions);
+			ListView questionsList = (ListView)rootView.findViewById(R.id.questions_list_preview);
+			questionsList.setAdapter(questionsAdapter);
+			questionsList.setLongClickable(true);
+			questionsList.setOnItemLongClickListener(new OnItemLongClickListener() {
+				@Override
+				public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					getTestActivity().goToQuestionsEdit();
+					return true;
+				}
+			});
+
+			if (test.beenPrinted()) {
+				blockLayout(rootView);
+			}
+			
+			// liczba pytañ
+			EditText questionsCount = (EditText)rootView.findViewById(R.id.editText_questions_count);
+			if (test.getQuestionsCount() < 2 || test.getQuestionsCount() > questions.size()) {
+				test.setQuestionsCount(questions.size());
+			}
+			questionsCount.setText(test.getQuestionsCount() + "");
+			questionsCount.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void afterTextChanged(Editable editable) {
+					int count = parseInt(editable.toString(), test.getQuestionsCount());
+					test.setQuestionsCount(count);
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+				@Override
+				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+			});
+			questionsCount.setOnFocusChangeListener(new OnFocusChangeListener() {
+				@Override
+				public void onFocusChange(View v, boolean hasFocus) {
+					if (!hasFocus) {
+						limitEditable((EditText)v, 2, questions.size(), questions.size());
+						getDataManager().saveTest(test);
+					}					
+				}				
+			});
+			
+			// d³ugoœæ identyfikatora
+			EditText idLength = (EditText)rootView.findViewById(R.id.editText_id_length);
+			idLength.setText(test.getStudentIdLength() + "");
+			idLength.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void afterTextChanged(Editable editable) {
+					int length = parseInt(editable.toString(), 0);
+					test.setStudentIdLength(length);
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+				@Override
+				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+			});
+			idLength.setOnFocusChangeListener(new OnFocusChangeListener() {
+				@Override
+				public void onFocusChange(View v, boolean hasFocus) {
+					if (!hasFocus) {
+						limitEditable((EditText)v, 0, 11, 0);
+						getDataManager().saveTest(test);
+					}
+				}
+			});
+			
+			// prze³¹cznik mieszania odpowiedzi
+			Switch shuffleQuestions = (Switch)rootView.findViewById(R.id.switch_shuffle_questions);
+			shuffleQuestions.setChecked(test.getShuffleQuestions());
+			shuffleQuestions.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(CompoundButton arg0, boolean value) {
+					test.shuffleQuestions(value);
+					getDataManager().saveTest(test);
+				}
+			});
+			
+			// prze³¹cznik mieszania pytañ
+			Switch shuffleAnswers = (Switch)rootView.findViewById(R.id.switch_shuffleAnswers);
+			shuffleAnswers.setChecked(test.getShuffleAnswers());
+			shuffleAnswers.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(CompoundButton arg0, boolean value) {
+					test.shuffleAnswers(value);
+					getDataManager().saveTest(test);
+				}
+			});
+			
+			// liczba wariacji
+			EditText variants = (EditText)rootView.findViewById(R.id.editText_variants);
+			variants.setText("1");
+			variants.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void afterTextChanged(Editable editable) {
+					int v = parseInt(editable.toString(), 0);
+					generate_variants = v;
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+				@Override
+				public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) { }
+			});
+			variants.setOnFocusChangeListener(new OnFocusChangeListener() {
+				@Override
+				public void onFocusChange(View v, boolean hasFocus) {
+					if (!hasFocus) {
+						((EditText)v).setText(generate_variants + "");
+					}
+				}
+			});
+			
+			
+			// przycisk generowania
+			Button generate = (Button)rootView.findViewById(R.id.button_generate);
+			generate.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View arg0) {
+					if (test.getQuestionsCount() < 2) {
+						Toast.makeText(getActivity(), "Test musi zawieraæ co najmniej dwa pytania", Toast.LENGTH_LONG).show();
+						return;
+					}
+					test.printed(true);
+					blockLayout(rootView);
+					getDataManager().saveTest(test);
+					ArrayList<Uri> uris = new ArrayList<Uri>();
+					
+					for (int i = 1; i <= generate_variants; i ++) {
+						TestSheet sheet = test.getTestSheet(i);
+						Bitmap bmp = new TestPrinter(sheet).drawToBitmap(PaperSize.A4, 300);
+						uris.add(saveBitmap(bmp, sheet));
+					}
+					
+					Intent shareIntent = new Intent();
+					shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+					shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+					shareIntent.setType("image/png");
+					startActivity(Intent.createChooser(shareIntent, "Wyœlij"));
+				}
+			});
+			
+			return rootView;
+		}
+		
+		public static Uri saveBitmap(Bitmap bitmap, TestSheet test) {
+			String simpleName = test.getName().replaceAll("[^a-zA-Z0-9 _-]+", "");
+			
+			File path = new File(Environment.getExternalStoragePublicDirectory(
+		            Environment.DIRECTORY_DOWNLOADS), "Tests/" + new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()));
+			path.mkdirs();
+			File file = new File(path, simpleName + " (" + test.getId() + "-" + test.getVariant() + ").png");
+		    
+			OutputStream stream = null;
+			try {
+				stream = new FileOutputStream(file);
+				bitmap.compress(CompressFormat.PNG, 100, stream);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			finally {
+				if (stream != null)
+					try {
+						stream.close();
+					} catch (Exception e) { }
+			}
+			return Uri.fromFile(file);
+		}
+
+
+		private int parseInt(String input, int def) {
+			try {
+				return Integer.parseInt(input);
+			}
+			catch (NumberFormatException nfe) {
+				return def;			
+			}	
+		}
+		
+		private void limitEditable(EditText e, int min, int max, int def) {
+			int value = parseInt(e.getText().toString(), def);
+			if (value < min || value > max) {
+				value = Math.min(max, Math.max(min, value));
+				e.setText(value + "");
+			}
+		}
+	}
 	
-	@SuppressLint("ValidFragment")
-	private static class CreateTestFragment extends Fragment {
+	private static abstract class CreateTestFragment extends Fragment {
 		private String name;
 		private DataManager dataManager = null;
 		

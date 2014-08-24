@@ -1,0 +1,134 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="pl.adamp.testchecker.client.CreateTestActivity$PreviewFragment" >
+
+    <RelativeLayout
+        android:id="@+id/gridLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/editText_variants" >
+
+        <RelativeLayout
+            android:id="@+id/upper_group"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <ListView
+                android:id="@+id/questions_list_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/editText_questions_count"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_margin="8dp"
+                android:choiceMode="multipleChoice" >
+            </ListView>
+
+            <Switch
+                android:id="@+id/switch_shuffleAnswers"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:text="@string/switch_shuffle_answers" />
+
+            <Switch
+                android:id="@+id/switch_shuffle_questions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/switch_shuffleAnswers"
+                android:layout_alignParentRight="true"
+                android:text="@string/shuffle_questions" />
+
+            <EditText
+                android:id="@+id/editText_questions_count"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/editText_id_length"
+                android:layout_alignParentRight="true"
+                android:ems="10"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/editText_id_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/switch_shuffle_questions"
+                android:layout_alignParentRight="true"
+                android:layout_toRightOf="@+id/textView_questions_count"
+                android:ems="10"
+                android:inputType="number"
+                android:text="2"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/textView_id_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/editText_id_length"
+                android:layout_alignBottom="@+id/editText_id_length"
+                android:layout_toLeftOf="@+id/editText_id_length"
+                android:text="@string/id_length"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/textView_questions_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/editText_questions_count"
+                android:layout_alignBottom="@+id/editText_questions_count"
+                android:layout_toLeftOf="@+id/editText_questions_count"
+                android:text="@string/questions_count"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </RelativeLayout>
+        
+        <GridLayout
+            android:id="@+id/layout_blocker"
+            android:background="@color/layout_blocker"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            >
+    	</GridLayout>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/textView_variants"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editText_variants"
+        android:layout_alignBottom="@+id/editText_variants"
+        android:layout_toLeftOf="@+id/editText_variants"
+        android:text="@string/variants"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <EditText
+        android:id="@+id/editText_variants"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_generate"
+        android:layout_alignParentRight="true"
+        android:ems="10"
+        android:inputType="number"
+        android:text="1"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/button_generate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/button_generate" />
+
+
+</RelativeLayout>

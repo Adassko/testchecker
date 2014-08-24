@@ -4,37 +4,34 @@
 # view AndroidManifest.xml #generated:66
 -keep class pl.adamp.testchecker.client.CaptureActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:122
+# view AndroidManifest.xml #generated:112
 -keep class pl.adamp.testchecker.client.CreateTestActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:101
+# view AndroidManifest.xml #generated:91
 -keep class pl.adamp.testchecker.client.HelpActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:110
+# view AndroidManifest.xml #generated:100
 -keep class pl.adamp.testchecker.client.MainActivity { <init>(...); }
 
 # view AndroidManifest.xml #generated:86
 -keep class pl.adamp.testchecker.client.PreferencesActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:135
+# view AndroidManifest.xml #generated:132
 -keep class pl.adamp.testchecker.client.QuestionEditActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:131
+# view AndroidManifest.xml #generated:124
 -keep class pl.adamp.testchecker.client.TestResultsActivity { <init>(...); }
 
 # view ldpi\res/layout-ldpi/capture.xml #generated:23
 # view res/layout/capture.xml #generated:23
 -keep class pl.adamp.testchecker.client.ViewfinderView { <init>(...); }
 
-# view AndroidManifest.xml #generated:91
--keep class pl.adamp.testchecker.client.history.HistoryActivity { <init>(...); }
-
-# onClick res/layout/activity_main.xml #generated:56
+# onClick res/layout/activity_main.xml #generated:45
 -keepclassmembers class * { *** captureClick(...); }
 
-# onClick res/layout/activity_main.xml #generated:34
+# onClick res/layout/activity_main.xml #generated:23
 -keepclassmembers class * { *** createTest(...); }
 
-# onClick res/layout/activity_main.xml #generated:45
+# onClick res/layout/activity_main.xml #generated:34
 -keepclassmembers class * { *** viewResults(...); }
 

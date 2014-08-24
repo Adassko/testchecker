@@ -96,6 +96,21 @@ public class TestSheet implements Serializable {
 			metadataRowsCount = metadataRows.size();
 		}
 	}
+	
+	/**
+	 * Zwraca kod danego wiersza lub -1 gdy go nie znaleziono
+	 */
+	public int getTestRowCode(TestRow row) {
+		synchronized (questions) {
+			int index = questions.indexOf(row);
+			if (index >= 0) return index;
+		}
+		synchronized (metadataRows) {
+			int index = metadataRows.indexOf(row);
+			if (index >= 0) return index + questionsCount;
+		}
+		return -1;
+	}
 
 	public int getId() {
 		return this.id;
@@ -164,7 +179,14 @@ public class TestSheet implements Serializable {
 			q.addAnswer(i + ".4");
 		}
 		
-		test.addMetadata(new Metadata(Metadata.Type.StudentId, 4));
+		test.addMetadata(new Metadata(Metadata.Type.StudentId, 5));
+		
+		for (TestRow row : test.questions) {
+			row.setReservedSpaceSize(4);
+		}
+		for (TestRow row : test.metadataRows) {
+			row.setReservedSpaceSize(4);
+		}
 		
 		return test;
 	}

@@ -1,5 +1,5 @@
 package pl.adamp.testchecker.test.entities;
 
-public interface HasId {
+public interface Listable {
 	int getId();
 }

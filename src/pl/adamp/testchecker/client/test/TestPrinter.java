@@ -1,15 +1,9 @@
 package pl.adamp.testchecker.client.test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.zxing.BarcodeFormat;
@@ -23,13 +17,11 @@ import pl.adamp.testchecker.test.TestReader;
 import pl.adamp.testchecker.test.TestRow;
 import pl.adamp.testchecker.test.entities.Answer;
 import pl.adamp.testchecker.test.entities.Metadata;
-import pl.adamp.testchecker.test.entities.Metadata.Type;
 import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.TestSheet;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -37,12 +29,9 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
-import android.net.Uri;
-import android.os.Environment;
 import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
-import android.widget.LinearLayout;
 
 public class TestPrinter {
 	private TestSheet test;
@@ -95,10 +84,6 @@ public class TestPrinter {
 		int padding = from.mm(2);
 
 		List<Question> questions = test.getQuestions();
-		
-		// TODO: USUN¥Æ !!!
-		questions.addAll(new ArrayList<Question>(questions));
-		
 		
 		int left, top;
 
@@ -241,7 +226,7 @@ public class TestPrinter {
 			
 			int ident = padding; // wciêcie przy odpowiedziach
 
-			String text = String.format("%d. %s (%d %s)", i + 1, question.getQuestion(), question.getValue(), "pkt.");
+			String text = String.format(Locale.US, "%d. %s (%d %s)", i + 1, question.getQuestion(), question.getValue(), "pkt.");
 			int maxWidth = (px - 2 * pageMargin - (columns - 1) * padding) / columns;
 			
 			layouts.add(new WrappedText(text, questionPaint, maxWidth, 0, singleLine * 5));

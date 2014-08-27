@@ -1,13 +1,10 @@
 package pl.adamp.testchecker.test.entities;
 
 import java.io.Serializable;
-import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import pl.adamp.testchecker.test.TestRow;
-import android.util.Pair;
-import android.util.SparseArray;
 
 public class TestSheet implements Serializable {
 	private static final long serialVersionUID = -2301572555540307633L;
@@ -20,6 +17,7 @@ public class TestSheet implements Serializable {
 	private final int variant;	
 	private final int id;
 	private String name;
+	private int totalPoints = 0;
 
 	/**
 	 * Zwraca kopiê listy pytañ bezpieczn¹ do iterowania w osobnym w¹tku
@@ -41,6 +39,13 @@ public class TestSheet implements Serializable {
 	 */
 	public int getQuestionsCount() {
 		return questionsCount;
+	}
+	
+	/**
+	 * @return Iloœæ mo¿liwych do uzyskania punktów
+	 */
+	public int getTotalPoints() {
+		return totalPoints;
 	}
 	
 	public List<Metadata> getMetadata() {
@@ -85,6 +90,7 @@ public class TestSheet implements Serializable {
 		synchronized (questions) {
 			questions.add(question);
 			questionsCount = questions.size();
+			totalPoints += question.getValue();
 			return question;
 		}
 	}

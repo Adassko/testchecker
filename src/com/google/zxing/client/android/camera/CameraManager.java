@@ -120,22 +120,26 @@ public final class CameraManager {
   }
 
   private volatile boolean autoFocusing = false;
+  private volatile boolean autoFocusSuccess = false;
   
   public boolean isAutoFocusing() {
 	  return autoFocusing;
   }
   
+  public boolean isFocused() {
+	  return autoFocusSuccess;
+  }
+  
   AutoFocusCallback afCallback = new AutoFocusCallback() {
 	@Override
 	public void onAutoFocus(boolean success, Camera cam) {
-		Log.d(TAG, "Autofocus " + (success ? "successed" : "failed"));
 		autoFocusing = false;
+		autoFocusSuccess = success;
 	}
   };
   public synchronized void autoFocus() {
 	  if (camera != null && !autoFocusing) {
 		  autoFocusing = true;
-		  Log.d(TAG, "Autofocus start");
 		  camera.autoFocus(afCallback);
 	  }
   }
@@ -143,8 +147,8 @@ public final class CameraManager {
   public synchronized void stopFocus() {
 	  if (camera != null) {
 		  camera.cancelAutoFocus();
-		  Log.d(TAG, "Autofocus cancelled");
 		  autoFocusing = false;
+		  autoFocusSuccess = true;
 	  }
   }
 

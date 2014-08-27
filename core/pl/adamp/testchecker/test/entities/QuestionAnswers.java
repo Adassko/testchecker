@@ -1,8 +1,11 @@
 package pl.adamp.testchecker.test.entities;
 
 import pl.adamp.testchecker.test.TestRow;
+import java.io.Serializable;
 
-public class QuestionAnswers {
+public class QuestionAnswers implements Serializable {
+	private static final long serialVersionUID = 1873662026412815095L;
+
 	private int possibleMistakes; // pole bitowe
 	private int answers;
 	private boolean markedByUser;
@@ -10,66 +13,135 @@ public class QuestionAnswers {
 	private final boolean isMetadata;
 	private final int testRowId;
 	private final TestRow testRow;
+	private boolean expanded;
+	private int questionValue;
+	private int points;
 
+	/**
+	 * @return Identyfikator wiersza na teœcie do którego nale¿y ta odpowiedŸ
+	 */
 	public int getTestRowId() {
 		return testRowId;
 	}
 
+	/**
+	 * @return Pobiera powi¹zany z odpowiedzi¹ wiersz odpowiedzi na teœcie
+	 */
 	public TestRow getTestRow() {
 		return testRow;
 	}
 	
+	/**
+	 * @return True jeœli odpowiedŸ dotyczy metadanych (pytanie niepunktowane)
+	 */
 	public boolean isMetadata() {
 		return isMetadata;
 	}
 	
+	/**
+	 * @return Lista zaznaczonych odpowiedzi jako maska bitowa (pierwsza odpowiedŸ na najm³odszym bicie)
+	 */
 	public int getMarkedAnswers() {
 		return answers;
 	}
 	
+	/**
+	 * Ustawia liste zaznaczonych odpowiedzi
+	 * @param answers Odpowiedzi (jako maska bitowa - pierwsza odpowiedŸ na najm³odszym bicie)
+	 */
+	public void setMarkedAnswers(int answers) {
+		this.answers = answers;
+	}
+	
+	/**
+	 * @return Pozycja pierwszej zaznaczonej odpowiedzi
+	 */
 	public Integer getFirstMarkedAnswerId() {
 		if (answers == 0)
 			return null;
 		return Integer.numberOfTrailingZeros(answers);
 	}
 	
+	/**
+	 * @return True jeœli zaznaczono dok³adnie jedno pole odpowiedzi
+	 */
 	public boolean isExactlyOneAnswerMarked() {
 		return Integer.bitCount(answers) == 1;
 	}
 
+	/**
+	 * @return Lista potencjalnie b³êdnie zaznaczonych odpowiedzi
+	 */
 	public int getPossibleMistakes() {
 		return possibleMistakes;
 	}
 
+	/**
+	 * Ustawia ¿e odpowiedŸ zosta³a zaznaczona przez u¿ytkownika i nie powinna byæ zmieniona przez skaner
+	 */
 	public void setMarkedByUser(boolean value) {
 		this.markedByUser = value;
 	}
 
+	/**
+	 * @return True jeœli odpowiedŸ zosta³a zaznaczona przez u¿ytkownika i nie powinna byæ zmieniona przez skaner
+	 */
 	public boolean isMarkedByUser() {
 		return this.markedByUser;
 	}
 
+	/**
+	 * @return True jeœli odpowiedŸ jest godna zaufania (wielokrotnie potwierdzona przy skanowaniu)
+	 */
 	public boolean isTrustworthy() {
 		return this.markedByUser || this.trustworthy;
 	}
 
+	/**
+	 * Ustaje odpowiedŸ za wiarygodn¹
+	 */
 	public void trust() {
 		trustworthy = true;
 	}
 
+	/**
+	 * Oznacza konkretn¹ kratkê w pytaniu jako zaznaczon¹ 
+	 * @param id Pozycja kratki w pytaniu
+	 */
 	public void addMarkedAnswer(int id) {
 		answers |= 1 << id;
 	}
+	
+	/**
+	 * Usuwa zaznaczenie odpowiedzi na danej pozycji
+	 * @param id Pozycja kratki w pytaniu
+	 */
+	public void removeMarkedAnswer(int id) {
+		answers &= ~(1 << id);
+	}
 
+	/**
+	 * @param id Pozycja odpowiedzi
+	 * @return True jeœli zaznaczono kratkê odpowiedzi w pytaniu na danej pozycji
+	 */
 	public boolean isMarkedAnswer(int id) {
 		return ((answers >> id) & 1) == 1;
 	}
 
+	/**
+	 * Oznacza kratkê odpowiedzi w pytaniu jako potencjalnie b³êdnie zaznaczon¹ 
+	 * @param id Pozycja kratki
+	 */
 	public void addPossibleMistake(int id) {
 		answers |= 1 << id;
 		possibleMistakes |= 1 << id;
 	}
 
+	/**
+	 * Sprawdza czy zaznaczona na danej pozycji kratka zosta³a zaznaczona przez pomy³kê 
+	 * @param id Pozycja kratki w pytaniu
+	 * @return True jeœli kratka zosta³a zaznaczona i oznaczona jako b³¹d
+	 */
 	public boolean isPossibleMistake(int id) {
 		return ((possibleMistakes >> id) & 1) == 1;
 	}
@@ -79,6 +151,42 @@ public class QuestionAnswers {
 		isMetadata = testRow instanceof Metadata.Row;
 		this.testRowId = testRowId;
 		this.markedByUser = false;
+	}
+	
+	/**
+	 * @return Czy lista powinna byæ rozwiniêta (podgl¹d wyników)
+	 */
+	public boolean isExpanded() {
+		return expanded;
+	}
+	
+	/**
+	 * Rozwija listê odpowiedzi (w podgl¹dzie wyników)
+	 */
+	public void setExpanded(boolean expanded) {
+		this.expanded = expanded;
+	}
+	
+	/**
+	 * @param points Liczba punktów uzyskanych za tê odpowiedŸ
+	 */
+	public void setPoints(int points) {
+		this.points = points;
+	}
+	
+	public void setQuestionValue(int points) {
+		this.questionValue = points;
+	}
+	
+	public int getQuestionValue() {
+		return this.questionValue;
+	}
+	
+	/**
+	 * @return Lista punktów uzyskanych za tê odpowiedŸ
+	 */
+	public int getPoints() {
+		return this.points;
 	}
 
 	@Override

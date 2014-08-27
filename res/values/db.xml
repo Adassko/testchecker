@@ -48,22 +48,12 @@ CREATE TABLE TestQuestions (
 );
 CREATE INDEX id_testquestions_ordinal ON TestQuestions (Ordinal ASC);
 
-CREATE TABLE StudentsGroups (
-    Id INTEGER PRIMARY KEY,
-    Name TEXT,
-    Semester INTEGER,
-    Year INTEGER
-);
-
 CREATE TABLE Students (
     Id INTEGER PRIMARY KEY,
     Name TEXT,
     Description TEXT,
     Email TEXT,
-    Telephone TEXT,
-    StudentGroupId INTEGER,
-    
-    FOREIGN KEY (StudentGroupId) REFERENCES StudentGroups(Id) ON UPDATE CASCADE ON DELETE SET NULL
+    Telephone TEXT
 );
 
 CREATE TABLE TestResults (
@@ -74,10 +64,12 @@ CREATE TABLE TestResults (
     Points INTEGER,
     CorrectAnswers INTEGER,
     IncorrectAnswers INTEGER,
+    AdditionalPoints INTEGER,
     Grade TEXT,
+    MaxPoints INTEGER,
+    Variant INTEGER,
     
-    FOREIGN KEY (TestId) REFERENCES Tests(Id) ON UPDATE CASCADE ON DELETE SET NULL,
-    FOREIGN KEY (StudentId) REFERENCES Students(Id) ON UPDATE CASCADE ON DELETE SET NULL
+    FOREIGN KEY (TestId) REFERENCES Tests(Id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE TestQuestionAnswers (

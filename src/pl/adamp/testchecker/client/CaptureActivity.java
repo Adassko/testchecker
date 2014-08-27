@@ -33,7 +33,9 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff.Mode;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -55,6 +57,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -69,6 +72,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import pl.adamp.testchecker.client.ViewfinderView.ScanProgressListener;
 import pl.adamp.testchecker.client.common.DataManager;
 import pl.adamp.testchecker.client.common.DialogHelper;
 import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
@@ -76,10 +80,12 @@ import pl.adamp.testchecker.client.common.TestsListAdapter;
 import pl.adamp.testchecker.client.result.ResultButtonListener;
 import pl.adamp.testchecker.client.result.ResultHandler;
 import pl.adamp.testchecker.client.result.ResultHandlerFactory;
-import pl.adamp.testchecker.client.share.ShareActivity;
 import pl.adamp.testchecker.client.test.TestDefinition;
 import pl.adamp.testchecker.client.test.TestEvaluator;
+import pl.adamp.testchecker.client.test.TestResult;
 import pl.adamp.testchecker.test.TestDecoderResult;
+import pl.adamp.testchecker.test.entities.AnswerSheet;
+import pl.adamp.testchecker.test.entities.QuestionAnswers;
 import pl.adamp.testchecker.test.entities.TestSheet;
 
 /**
@@ -125,6 +131,7 @@ public final class CaptureActivity extends Activity implements
 	private BeepManager beepManager;
 	private TestDefinition currentTestDefinition;
 	private DataManager dataManager;
+	private ProgressBar progressBar;
 
 	TestSheet getCurrentTestSheet() {
 		return currentTestSheet;
@@ -168,12 +175,17 @@ public final class CaptureActivity extends Activity implements
 		((TextView)findViewById(R.id.status_view))
 		.setText(R.string.scan_test_barcode);
 		
+		progressBar = (ProgressBar)findViewById(R.id.progressBar);
+		progressBar.setVisibility(View.GONE);
+		progressBar.getProgressDrawable().setColorFilter(Color.GREEN, Mode.MULTIPLY);
+		
 		if (testId >= 0 && variant >= 1)
 			chooseTest(testId, variant);
 				
 		currentTestSheet = null;
 	}
 	
+
 	/**
 	 * Zmienia test
 	 * @return True jeœli test istnieje w bazie danych i jest ró¿ny od ju¿ za³adowanego
@@ -201,8 +213,14 @@ public final class CaptureActivity extends Activity implements
 	
 		((TextView)findViewById(R.id.status_view))
 			.setText(R.string.msg_default_status);
+		
+		progressBar.setVisibility(View.VISIBLE);
+		progressBar.setMax(testSheet.getQuestionsCount());
+		progressBar.setProgress(0);
+		
+		viewfinderView.setTestInstance(testSheet);
 	}
-
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -218,6 +236,17 @@ public final class CaptureActivity extends Activity implements
 
 		viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
 		viewfinderView.setCameraManager(cameraManager);
+		viewfinderView.setScanProgressListener(new ScanProgressListener() {
+			@Override
+			public void setProgress(int progress) {
+				progressBar.setProgress(progress);
+			}
+			
+			@Override
+			public void setSecondaryProgress(int progress) {
+				progressBar.setSecondaryProgress(progress);
+			}
+		});
 
 		resultView = findViewById(R.id.result_view);
 		statusView = (TextView) findViewById(R.id.status_view);
@@ -304,9 +333,7 @@ public final class CaptureActivity extends Activity implements
 			cameraManager.autoFocus();
 			return true;
 		case KeyEvent.KEYCODE_CAMERA:
-			// Handle these events so they don't launch the Camera app
 			return true;
-			// Use volume up/down to turn on light
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
 			cameraManager.setTorch(false);
 			return true;
@@ -363,7 +390,24 @@ public final class CaptureActivity extends Activity implements
 			
 			break;
 		case R.id.menu_complete:
-			break;
+			AnswerSheet answerSheet = viewfinderView.getAnswerSheet();
+			
+			TestResult testResult = TestEvaluator.getTestResults(getCurrentTestSheet(), answerSheet);
+			testResult = dataManager.saveTestResult(testResult);
+			if (testResult != null) {
+				for (QuestionAnswers answer : answerSheet.getAcceptedAnswers()) {
+					dataManager.saveQuestionAnswers(testResult, answer);
+				}
+			
+				startActivity(
+						new Intent(getApplicationContext(), TestResultsActivity.class)
+							.putExtra(TestResultsActivity.TEST_RESULT_ID, testResult.getId())
+							);
+			} else {
+				Toast.makeText(this, R.string.msg_saveerror, Toast.LENGTH_LONG).show();
+			}
+			
+			return true;			
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -429,7 +473,21 @@ public final class CaptureActivity extends Activity implements
 		if (rawResult instanceof TestDecoderResult) {
 			TestDecoderResult result = (TestDecoderResult)rawResult;
 			
-			TestEvaluator.getTestResults(getCurrentTestSheet(), result.getAnswers());
+			TestResult testResult = TestEvaluator.getTestResults(getCurrentTestSheet(), result.getAnswers());
+			testResult = dataManager.saveTestResult(testResult);
+			if (testResult != null) {
+				for (QuestionAnswers answer : result.getAnswers().getAcceptedAnswers()) {
+					dataManager.saveQuestionAnswers(testResult, answer);
+				}
+			
+				Intent intent = new Intent(getApplicationContext(), TestResultsActivity.class);
+				intent.putExtra(TestResultsActivity.TEST_RESULT_ID, testResult.getId());
+				startActivity(intent);
+			} else {
+				Toast.makeText(this, R.string.msg_saveerror, Toast.LENGTH_LONG).show();
+			}
+			
+			return;			
 		}
 		
 		if (rawResult.getBarcodeFormat() == BarcodeFormat.CODE_128) {
@@ -455,156 +513,14 @@ public final class CaptureActivity extends Activity implements
 			restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
 			return;
 		}
-		
-		ResultHandler resultHandler = ResultHandlerFactory.makeResultHandler(
-				this, rawResult);
-
-		boolean fromLiveScan = barcode != null;
-		if (fromLiveScan) {
-			// Then not from history, so beep/vibrate and we have an image to
-			// draw on
-			beepManager.playBeepSoundAndVibrate();
-			drawResultPoints(barcode, scaleFactor, rawResult);
-		}
-
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
-		if (fromLiveScan
-				&& prefs.getBoolean(PreferencesActivity.KEY_BULK_MODE, false)) {
-			Toast.makeText(
-					getApplicationContext(),
-					getResources().getString(R.string.msg_bulk_mode_scanned)
-							+ " (" + rawResult.getText() + ')',
-					Toast.LENGTH_SHORT).show();
-			// Wait a moment or else it will scan the same barcode continuously
-			// about 3 times
-			restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
-		} else {
-			handleDecodeInternally(rawResult, resultHandler, barcode);
-		}
 	}
 
-	/**
-	 * Superimpose a line for 1D or dots for 2D to highlight the key features of
-	 * the barcode.
-	 * 
-	 * @param barcode
-	 *            A bitmap of the captured image.
-	 * @param scaleFactor
-	 *            amount by which thumbnail was scaled
-	 * @param rawResult
-	 *            The decoded results which contains the points to draw.
-	 */
-	private void drawResultPoints(Bitmap barcode, float scaleFactor,
-			Result rawResult) {
-		ResultPoint[] points = rawResult.getResultPoints();
-		if (points != null && points.length > 0) {
-			Canvas canvas = new Canvas(barcode);
-			Paint paint = new Paint();
-			paint.setColor(getResources().getColor(R.color.result_points));
-			if (points.length == 2) {
-				paint.setStrokeWidth(4.0f);
-				drawLine(canvas, paint, points[0], points[1], scaleFactor);
-			} else if (points.length == 4
-					&& (rawResult.getBarcodeFormat() == BarcodeFormat.EAN_13 || rawResult.getBarcodeFormat() == BarcodeFormat.TEST)) {
-				// Hacky special case -- draw two lines, for the barcode and
-				// metadata
-				// up and bootom for test
-				drawLine(canvas, paint, points[0], points[1], scaleFactor);
-				drawLine(canvas, paint, points[2], points[3], scaleFactor);
-			} else {
-				paint.setStrokeWidth(10.0f);
-				for (ResultPoint point : points) {
-					if (point != null) {
-						canvas.drawPoint(scaleFactor * point.getX(),
-								scaleFactor * point.getY(), paint);
-					}
-				}
-			}
-		}
-	}
 
 	private static void drawLine(Canvas canvas, Paint paint, ResultPoint a,
 			ResultPoint b, float scaleFactor) {
 		if (a != null && b != null) {
 			canvas.drawLine(scaleFactor * a.getX(), scaleFactor * a.getY(),
 					scaleFactor * b.getX(), scaleFactor * b.getY(), paint);
-		}
-	}
-
-	// Put up our own UI for how to handle the decoded contents.
-	private void handleDecodeInternally(Result rawResult,
-			ResultHandler resultHandler, Bitmap barcode) {
-		statusView.setVisibility(View.GONE);
-		viewfinderView.setVisibility(View.GONE);
-		resultView.setVisibility(View.VISIBLE);
-
-		ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
-		if (barcode == null) {
-			barcodeImageView.setImageBitmap(BitmapFactory.decodeResource(
-					getResources(), R.drawable.launcher_icon));
-		} else {
-			barcodeImageView.setImageBitmap(barcode);
-		}
-
-		TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
-		formatTextView.setText(rawResult.getBarcodeFormat().toString());
-
-		TextView typeTextView = (TextView) findViewById(R.id.type_text_view);
-		typeTextView.setText(resultHandler.getType().toString());
-
-		DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT,
-				DateFormat.SHORT);
-		TextView timeTextView = (TextView) findViewById(R.id.time_text_view);
-		timeTextView
-				.setText(formatter.format(new Date(rawResult.getTimestamp())));
-
-		TextView metaTextView = (TextView) findViewById(R.id.meta_text_view);
-		View metaTextViewLabel = findViewById(R.id.meta_text_view_label);
-		metaTextView.setVisibility(View.GONE);
-		metaTextViewLabel.setVisibility(View.GONE);
-		Map<ResultMetadataType, Object> metadata = rawResult
-				.getResultMetadata();
-		if (metadata != null) {
-			StringBuilder metadataText = new StringBuilder(20);
-			for (Map.Entry<ResultMetadataType, Object> entry : metadata
-					.entrySet()) {
-				if (DISPLAYABLE_METADATA_TYPES.contains(entry.getKey())) {
-					metadataText.append(entry.getValue()).append('\n');
-				}
-			}
-			if (metadataText.length() > 0) {
-				metadataText.setLength(metadataText.length() - 1);
-				metaTextView.setText(metadataText);
-				metaTextView.setVisibility(View.VISIBLE);
-				metaTextViewLabel.setVisibility(View.VISIBLE);
-			}
-		}
-
-		TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
-		CharSequence displayContents = resultHandler.getDisplayContents();
-		contentsTextView.setText(displayContents);
-		// Crudely scale betweeen 22 and 32 -- bigger font for shorter text
-		int scaledSize = Math.max(22, 32 - displayContents.length() / 4);
-		contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
-
-		TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
-		supplementTextView.setText("");
-		supplementTextView.setOnClickListener(null);
-
-		int buttonCount = resultHandler.getButtonCount();
-		ViewGroup buttonView = (ViewGroup) findViewById(R.id.result_button_view);
-		buttonView.requestFocus();
-		for (int x = 0; x < ResultHandler.MAX_BUTTON_COUNT; x++) {
-			TextView button = (TextView) buttonView.getChildAt(x);
-			if (x < buttonCount) {
-				button.setVisibility(View.VISIBLE);
-				button.setText(resultHandler.getButtonText(x));
-				button.setOnClickListener(new ResultButtonListener(
-						resultHandler, x));
-			} else {
-				button.setVisibility(View.GONE);
-			}
 		}
 	}
 

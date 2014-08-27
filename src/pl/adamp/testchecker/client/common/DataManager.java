@@ -9,9 +9,14 @@ import java.util.Set;
 import pl.adamp.testchecker.client.common.DBHelper.Reader;
 import pl.adamp.testchecker.client.common.DBHelper.RowReader;
 import pl.adamp.testchecker.client.test.TestDefinition;
+import pl.adamp.testchecker.client.test.TestResult;
+import pl.adamp.testchecker.test.TestRow;
 import pl.adamp.testchecker.test.entities.Answer;
 import pl.adamp.testchecker.test.entities.Question;
+import pl.adamp.testchecker.test.entities.QuestionAnswers;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
+import pl.adamp.testchecker.test.entities.Student;
+import pl.adamp.testchecker.test.entities.TestSheet;
 import pl.adamp.testchecker.test.interfaces.AnswersInflater;
 import pl.adamp.testchecker.test.interfaces.QuestionsInflater;
 import android.content.ContentValues;
@@ -88,6 +93,18 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 				}
 		});
 		return result[0];
+	}
+	
+	public SparseArray<String> getGradingTable() {
+		SparseArray<String> result = new SparseArray<String>();
+		
+		result.put(0, "1");
+		result.put(30, "2");
+		result.put(50, "3");
+		result.put(70, "4");
+		result.put(90, "5");
+		
+		return result;
 	}
 	
 	/**
@@ -347,6 +364,149 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 	}
 	
 	/**
+	 * Pobiera rezultat testu o danym ID
+	 * @param id ID rezultatu testu
+	 * @return Instancja rezultatu testu lub NULL w przypadku b³êdu
+	 */
+	public TestResult getTestResult(int id) {
+		final TestResult[] result = new TestResult[] { null };
+
+		db.select(new String[] { "Id", "TestId", "StudentId", "Date", "Points", "AdditionalPoints", "CorrectAnswers",
+				"IncorrectAnswers", "Grade", "MaxPoints", "Variant" },
+				"TestResults", // FROM
+				"Id = ?", vals(id), // WHERE
+				null, // ORDER BY,
+				new RowReader() {
+			public void readRow(Reader r) {
+				TestResult testResult = new TestResult(r.getInt("Id"));
+				
+				testResult.setTestId(r.getInt("TestId"));
+				testResult.setStudentId(r.getInt("StudentId"));
+				testResult.setDate(new Date(1000L * r.getInt("Date")));
+				testResult.setPoints(r.getInt("Points"));
+				testResult.setAdditionalPoints(r.getInt("AdditionalPoints"));
+				testResult.setCorrect(r.getInt("CorrectAnswers"));
+				testResult.setIncorrect(r.getInt("IncorrectAnswers"));
+				testResult.setGrade(r.getString("Grade"));
+				testResult.setMaxPoints(r.getInt("MaxPoints"));
+				testResult.setVariant(r.getInt("Variant"));
+				
+				result[0] = testResult;
+			}
+		});
+
+		return result[0];
+	}
+	
+	/**
+	 * Zapisuje reszultat testu
+	 * @return Instancja rezultatu uzupe³niona o ID, lub NULL w przypadku b³êdu
+	 */
+	public TestResult saveTestResult(TestResult result) {
+		ContentValues values = new ContentValues();
+		values.put("TestId", result.getTestId());
+		values.put("Variant", result.getVariant());
+		values.put("StudentId", result.getStudentId());
+		values.put("Date", result.getDate().getTime() / 1000L);
+		values.put("Points", result.getPoints());
+		values.put("AdditionalPoints", result.getAdditionalPoints());
+		values.put("CorrectAnswers", result.getCorrect());
+		values.put("IncorrectAnswers", result.getIncorrect());
+		values.put("Grade", result.getGrade());
+		values.put("MaxPoints", result.getMaxPoints());
+		
+		if (result.getId() >= 0) {
+			int updatedRows = db.update("TestResults", values, "Id = ?", vals(result.getId()));
+			
+			if (updatedRows == 1)
+				return result;
+		} else {
+			int id = (int)db.insert("TestResults", values);
+			
+			result.setId(id);
+			if (id >= 0) {
+				return result;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Zapisuje zaznaczone odpowiedzi do pytania na konkretnym wyniku testu 
+	 * @param testResult Wynik testu
+	 * @param answers Zaznaczone odpowiedzi w pojedynczym pytaniu
+	 * @return Oryginalna instancja parametru answers, lub NULL je¿eli wyst¹pi³ b³¹d
+	 */
+	public QuestionAnswers saveQuestionAnswers(TestResult testResult, QuestionAnswers answers) {
+		int resultId = testResult.getId();
+		if (resultId < 0) {
+			return null;
+		}
+
+		TestRow testRow = answers.getTestRow();
+		if (testRow instanceof Question == false)
+			return null;
+		
+		Question question = (Question) testRow;
+		int questionId = question.getId(); // =/= answers.getTestRowId()
+		
+		ContentValues values = new ContentValues();
+		values.put("Points", answers.getPoints());
+		values.put("Answers", answers.getMarkedAnswers());
+		
+		int updatedRows = db.update("TestQuestionAnswers", values, "TestResultId = ? AND QuestionId = ?",
+				vals(resultId, questionId));
+		
+		if (updatedRows == 0) {
+			values.put("TestResultId", resultId);
+			values.put("QuestionId", questionId);
+			
+			int id = (int)db.insert("TestQuestionAnswers", values);
+			
+			if (id >= 0)
+				return answers;
+		}
+		return null;
+	}
+	
+	/**
+	 * Pobiera zapisane odpowiedzi do testu
+	 * @param testSheet Arkusz testowy
+	 * @param testResult Rezultat
+	 * @return
+	 */
+	public List<QuestionAnswers> getQuestionAnswers(TestSheet testSheet, TestResult testResult) {
+		final SparseArray<QuestionAnswers> map = new SparseArray<QuestionAnswers>();
+		List<QuestionAnswers> result = new ArrayList<QuestionAnswers>();
+
+		TestSheet test = testSheet;
+		for (Question question : testSheet.getQuestions()) {
+			QuestionAnswers qa = new QuestionAnswers(test.getTestRowCode(question), question);
+			map.put(question.getId(), qa);
+			result.add(qa);
+		}
+		
+		db.select(new String[] { "TestResultId", "Answers", "Points", "QuestionId" },
+				"TestQuestionAnswers", // FROM
+				"TestResultId = ?", vals(testResult.getId()), // WHERE
+				"QuestionId ASC", // ORDER BY
+				new RowReader() {
+					@Override
+					public void readRow(Reader r) {
+						int questionId = r.getInt("QuestionId");
+						QuestionAnswers qa = map.get(questionId);
+						if (qa != null) {
+							qa.setPoints(r.getInt("Points"));
+							qa.setMarkedAnswers(r.getInt("Answers"));
+						}
+					}
+				}
+		);
+		
+		return result;
+	}
+	
+	/**
 	 * Zapisuje definicje testu. Pytania nale¿y powi¹zaæ z testem osobno korzystaj¹c z {@link #assignQuestionToTest()}
 	 * @param test Test do zapisu
 	 * @return Instancja testu uzupe³niona o identyfikator lub NULL w przypadku b³êdu
@@ -406,7 +566,11 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		// wstawienie nowego rekordu jeœli nie istnieje
 		values.put("TestId", test.getId());
 		values.put("QuestionId", question.getId());
-		values.put("Ordinal", System.currentTimeMillis() / 1000);
+		
+		// kolejnoœæ pytania w danym teœcie, nie musi byæ kolejna
+		// dla uproszczenia u¿yto aktualnego czasu dziêki czemu
+		// zawsze póŸniej wybrane pytanie bêdzie mia³o póŸniejsz¹ pozycjê
+		values.put("Ordinal", System.currentTimeMillis());
 		
 		return db.insert("TestQuestions", values) != -1;
 	}
@@ -419,6 +583,13 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 	 */
 	public boolean unassignTestQuestion(Question question, TestDefinition test) {
 		return db.delete("TestQuestions", "TestId = ? AND QuestionId = ?", vals(test.getId(), question.getId())) == 1;
+	}
+	
+	public Student getStudent(long studentId) {
+		if (studentId == 107926) {
+			return new Student("Adam P³onka");
+		}
+		return null;
 	}
 	
 	/**

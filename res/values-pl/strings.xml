@@ -17,6 +17,7 @@
 
 -->
 <resources>
+    <string name="action_confirm">Zatwierdź</string>
     <string name="msg_test_removed">Test został usunięty</string>
     <string name="msg_cannot_remove_test">Nie można usunąć testu z nieznanej przyczyny</string>
     <string name="menu_tests_editname">Edytuj nazwę&#8230;</string>
@@ -192,4 +193,6 @@
     <string name="questions_count">Liczba pytań na teście</string>
     <string name="variants">Liczba wariantów</string>
     <string name="id_length">Długość ID ucznia</string>
-</resources>
+    <string name="additional_points">Punkty dodatkowe</string>
+
+    <string name="grade">Ocena</string></resources>

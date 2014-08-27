@@ -1,11 +1,14 @@
 package pl.adamp.testchecker.client.common;
 
+import java.lang.reflect.Method;
+
 import pl.adamp.testchecker.client.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+import android.widget.NumberPicker.Formatter;
 
 public class DialogHelper {
 
@@ -43,14 +46,36 @@ public class DialogHelper {
 			.setMessage(messageResId);
 		input = new NumberPicker(context);
 		input.setOrientation(NumberPicker.HORIZONTAL);
+		final int originalMin = min;
+		if (min < 0) { // numberPicker nie pozwala na wybór ujemnych wartoœci - obejœcie
+			value -= min;
+			max = max - min;
+			min = 0;
+
+			input.setFormatter(new Formatter() {
+				@Override
+				public String format(int index) {
+					return Integer.toString(index + originalMin);
+				}
+			});
+		}
 		input.setMinValue(min);
 		input.setMaxValue(max);
 		input.setValue(value);
+		input.setWrapSelectorWheel(false);
+
+		if (originalMin < 0) { // hack na bug w androidzie - wartoœci siê nie wyœwietlaj¹ poprawnie do pierwszego dotkniêcia
+			try {
+				Method method = input.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
+				method.setAccessible(true);
+				method.invoke(input, true);
+			} catch (Exception e) { }
+		}
 		builder.setView(input);
 		
 		builder.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				acceptListener.onAccept(input.getValue() + "");
+				acceptListener.onAccept(Integer.toString(input.getValue() + originalMin));
 			}
 		}).setNegativeButton(R.string.button_cancel, null).show();
 	}

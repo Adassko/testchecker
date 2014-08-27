@@ -15,6 +15,7 @@
  limitations under the License.
 -->
 <resources>
+    <string name="action_confirm">Confirm</string>
     <string name="msg_test_removed">The test has been removed</string>
     <string name="msg_cannot_remove_test">Test cannot be removed due to unknown reason</string>
     <string name="menu_tests_editname">Edit name&#8230;</string>
@@ -198,5 +199,7 @@
     <string name="questions_count">No. of questions on test</string>
     <string name="variants">Number of variants</string>
     <string name="id_length">Length of student ID</string>
+    <string name="additional_points">Additional points</string>
+    <string name="grade">Grade</string>
 
 </resources>

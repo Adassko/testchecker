@@ -27,6 +27,7 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.graphics.Shader.TileMode;
@@ -39,11 +40,15 @@ import java.util.List;
 
 import pl.adamp.testchecker.client.common.Colors;
 import pl.adamp.testchecker.client.test.TestEvaluator;
+import pl.adamp.testchecker.client.test.TestResult;
 import pl.adamp.testchecker.test.TestArea;
 import pl.adamp.testchecker.test.TestReader;
 import pl.adamp.testchecker.test.TestRow;
+import pl.adamp.testchecker.test.entities.Answer;
 import pl.adamp.testchecker.test.entities.AnswerSheet;
+import pl.adamp.testchecker.test.entities.Question;
 import pl.adamp.testchecker.test.entities.QuestionAnswers;
+import pl.adamp.testchecker.test.entities.TestSheet;
 
 /**
  * This view is overlaid on top of the camera preview. It adds the viewfinder rectangle and partial
@@ -72,7 +77,19 @@ public final class ViewfinderView extends View {
 	private int testAreaValidTime;
 	private volatile int foundAnswersPerFrame = 0;
 	private final Paint laserPaint;
+	private ScanProgressListener progressListener;
+	private TestSheet currentTestSheet;
 
+	public interface ScanProgressListener {
+		void setProgress(int progress);
+
+		void setSecondaryProgress(int progress);
+	}
+	
+	public void setScanProgressListener(ScanProgressListener progressListener) {
+		this.progressListener = progressListener;
+	}
+	
 	// This constructor is used when the class is built from an XML resource.
 	public ViewfinderView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -103,6 +120,8 @@ public final class ViewfinderView extends View {
 
 	long lastTimeFound = System.currentTimeMillis();
 	long lastTime = System.currentTimeMillis();
+	long testResultsValidity = 0;
+	TestResult testResult;
 	
 	@Override
 	public void onDraw(Canvas canvas) {
@@ -129,7 +148,7 @@ public final class ViewfinderView extends View {
 		} else {
 			if (lastTimeFound < currentTime - 2000) {
 				cameraManager.autoFocus();
-				lastTimeFound = currentTime - 1000;
+				lastTimeFound = currentTime - 1500;
 			}
 		}
 		foundAnswersPerFrame = 0;
@@ -204,9 +223,10 @@ public final class ViewfinderView extends View {
 			}
 			
 			// Draw a "laser scanner" line through the middle to show decoding is active
+			double pxDelta = timeDelta * 0.4; // pixels per millisecond
 			if (!scannerGoRight)
-				timeDelta = -timeDelta;
-			scannerPosition += timeDelta * 0.4; // pixels per millisecond
+				pxDelta = -pxDelta;
+			scannerPosition += pxDelta; 
 			if (scannerPosition > frame.width()) {
 				scannerPosition = frame.width() * 2 - scannerPosition;
 				scannerGoRight = false;
@@ -214,35 +234,76 @@ public final class ViewfinderView extends View {
 				scannerPosition = -scannerPosition;
 				scannerGoRight = true;
 			}
-						
+
 			canvas.drawRect(frame.left + scannerPosition - 12, frame.top + 1, frame.left + scannerPosition + 12, frame.bottom - 1, laserPaint);
 
 			paint.setColor(Colors.answersheet_background);
 			canvas.drawRect(5, height - 120, width - 5, height - 5, paint);
+			paint.setTextAlign(Align.CENTER);
 			
 			paint.setTextSize(20);
+			int trusted = 0, accepted = 0;
+			TestResult a;
 			for (QuestionAnswers result : answerSheet.getAcceptedAnswers()) {
+				accepted ++;
 				if (result.isMetadata()) continue;
-				TestRow testRow = result.getTestRow();
+				Question testRow = (Question)result.getTestRow();
 				int rowId = result.getTestRowId();
 				float x = rowId * 20 + 10;
 				
 				paint.setColor(Colors.answersheet_text);
-				canvas.drawText((rowId + 1) + "", x + 2, height - 105, paint);
+				canvas.drawText((rowId + 1) + "", x + 7, height - 105, paint);
 
-				paint.setColor(TestEvaluator.isAnswerCorrect(result)
-						? Colors.answersheet_correct
-						: Colors.answersheet_incorrect);
-
-				paint.setAlpha(result.isTrustworthy() ? 0x80 : 0x30);
-				for (int i = 0; i < testRow.getAnswersCount(); i ++) {
-					paint.setStyle(result.isMarkedAnswer(i)
+				if (result.isTrustworthy()) {
+					paint.setAlpha(0x80);
+					trusted ++;
+				} else {
+					paint.setAlpha(0x30);
+				}
+				List<Answer> answers = testRow.getAnswers();
+				for (int i = 0; i < answers.size(); i ++) {
+					boolean isMarked = result.isMarkedAnswer(i);
+					paint.setStyle(isMarked
 						? Paint.Style.FILL
 						: Paint.Style.STROKE);
+					paint.setColor(isMarked == answers.get(i).isCorrect()
+							? Colors.answersheet_correct
+							: Colors.answersheet_incorrect);
 					float y = height - 95 + i * 20;
 					canvas.drawRect(x, y, x + 15, y + 15, paint);
 				}
 			}
+			if (progressListener != null) {
+				progressListener.setProgress(trusted);
+				progressListener.setSecondaryProgress(accepted);
+			}
+
+			long studentId = TestEvaluator.getStudentId(answerSheet);
+			if (studentId != 0) {
+				paint.setTextAlign(Align.RIGHT);
+				paint.setTextSize(20);
+				paint.setAlpha(0xb0);
+				paint.setColor(Color.BLUE);
+				canvas.drawText(studentId + "", frame.width(), frame.height() - 5, paint);
+			}
+			
+			if (currentTestSheet != null) {
+				testResultsValidity -= timeDelta;
+				if (testResultsValidity <= 0) {
+					testResult = TestEvaluator.getTestResults(currentTestSheet, answerSheet);
+					testResultsValidity = 300;
+				}
+			}
+			
+			if (testResult != null) {
+				float percent = testResult.getTotalPoints() / (float)testResult.getMaxPoints(); 
+				paint.setTextAlign(Align.RIGHT);
+				paint.setColor(Color.HSVToColor(new float[] { 120f * percent, 1, 1 }));
+				paint.setTextSize(38 + 8 * percent);
+				float textAscent = paint.ascent();
+				canvas.drawText(Math.round(percent * 100) + "%" , frame.right, frame.top - textAscent, paint);
+			}
+			
 			paint.setStyle(Paint.Style.FILL);
 			
 			// Request another update at the animation interval, but only repaint the laser line,
@@ -253,6 +314,10 @@ public final class ViewfinderView extends View {
 					frame.right + POINT_SIZE,
 					frame.bottom + POINT_SIZE);
 		}
+	}
+	
+	public void setTestInstance(TestSheet test) {
+		currentTestSheet = test;
 	}
 
 	public void drawViewfinder() {
@@ -276,7 +341,7 @@ public final class ViewfinderView extends View {
 
 	public void addPossibleAnswer(QuestionAnswers answer) {
 		foundAnswersPerFrame ++;
-		if (foundAnswersPerFrame == 2)
+		if (foundAnswersPerFrame == 1 && !cameraManager.isFocused())
 			cameraManager.stopFocus();
 	}
 	

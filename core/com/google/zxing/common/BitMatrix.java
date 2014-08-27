@@ -16,6 +16,8 @@
 
 package com.google.zxing.common;
 
+import com.google.zxing.ResultPoint;
+
 /**
  * <p>Represents a 2D matrix of bits. In function arguments below, and throughout the common
  * module, x is the column position, and y is the row position. The ordering is always x, y.
@@ -31,16 +33,20 @@ package com.google.zxing.common;
  * @author Sean Owen
  * @author dswitkin@google.com (Daniel Switkin)
  */
-public final class BitMatrix {
+public class BitMatrix {
 
-  private final int width;
-  private final int height;
-  private final int rowSize;
-  private final int[] bits;
+  protected final int width;
+  protected final int height;
+  protected final int rowSize;
+  protected final int[] bits;
 
   // A helper to construct a square matrix.
   public BitMatrix(int dimension) {
     this(dimension, dimension);
+  }
+  
+  public ResultPoint translatePoint(ResultPoint point) {
+	  return point;
   }
 
   public BitMatrix(int width, int height) {

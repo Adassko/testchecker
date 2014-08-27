@@ -16,6 +16,7 @@ import java.util.Map;
 
 
 
+
 import pl.adamp.testchecker.test.entities.AnswerSheet;
 import pl.adamp.testchecker.test.entities.QuestionAnswers;
 import pl.adamp.testchecker.test.entities.TestSheet;
@@ -27,6 +28,7 @@ import android.util.Log;
 
 import android.util.Pair;
 import android.util.SparseArray;
+
 
 
 
@@ -43,11 +45,12 @@ import com.google.zxing.ResultPoint;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.RotatedBitMatrix;
 import com.google.zxing.common.detector.MathUtils;
 import com.google.zxing.oned.OneDReader;
 
 public class TestReader implements Reader {
-	private static final int MAX_AVG_VARIANCE = 34;
+	private static final int MAX_AVG_VARIANCE = 42;
 	private final String TAG = TestReader.class.getName();
 	
 	/*static final int[][] LOWER_PATTERNS = {
@@ -60,7 +63,7 @@ public class TestReader implements Reader {
 	    {1, 1, 2, 2, 1},
 	    {1, 2, 2, 1, 1},
 	    {1, 1, 1, 3, 2}, 
-	    {1, 3, 1, 1, 2}
+	    {1, 3, 1, 1, 2},
 	};*/
 	
 	static final int[][] CODE_PATTERNS = {
@@ -427,10 +430,10 @@ public class TestReader implements Reader {
 				if (isTicked(matrix, center, halfBoxHeight * dpp)) {
 					result.addMarkedAnswer(i);
 					center.setColor(Color.BLACK);
-					resultPointCallback.foundPossibleResultPoint(center);
+					resultPointCallback.foundPossibleResultPoint(matrix.translatePoint(center));
 				} else {
 					center.setColor(Color.WHITE);
-					resultPointCallback.foundPossibleResultPoint(center);
+					resultPointCallback.foundPossibleResultPoint(matrix.translatePoint(center));
 				}
 			}
 			
@@ -490,10 +493,6 @@ public class TestReader implements Reader {
 		BitMatrix matrix = image.getBlackMatrix();
 		
 		List<TestRegion> testRegions = detectTestRegions(matrix);
-		/*if (testRegions.size() > 2) {
-			testResultCallback.foundArea(
-					new TestArea(testRegions.get(0), testRegions.get(testRegions.size() - 1), testRegions.size()));
-		}*/
 		
 		detectGivenAnswers(matrix, testRegions);
 		

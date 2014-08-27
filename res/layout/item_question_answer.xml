@@ -1,0 +1,42 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    tools:ignore="HardcodedText" >
+
+    <TextView
+        android:id="@+id/textview_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1) Pytanie"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <LinearLayout
+        android:id="@+id/answers"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textview_question"
+        android:layout_gravity="left"
+        android:layout_toLeftOf="@+id/textview_points"
+        android:orientation="horizontal" />
+
+    <LinearLayout
+        android:id="@+id/answers_detailed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/answers"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/textview_points"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textview_question"
+        android:text="3/4"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+</RelativeLayout>

@@ -207,7 +207,7 @@ final class DBHelper {
 	}
 	
 	public class OpenHelper extends SQLiteOpenHelper {
-		private static final int DB_VERSION = 2;
+		private static final int DB_VERSION = 6;
 		private static final String DB_NAME = "testchecker.db";
 		private static final boolean ENABLE_FOREIGN_KEYS = true;
 		
@@ -219,13 +219,6 @@ final class DBHelper {
 		}
 		
 		@Override
-		public void onOpen(SQLiteDatabase db) {
-			super.onOpen(db);
-			if (ENABLE_FOREIGN_KEYS)
-				db.execSQL("PRAGMA foreign_keys = ON;");
-		}
-
-		@Override
 		public void onCreate(SQLiteDatabase sqLiteDatabase) {
 			String schema = context.getResources().getString(R.string.db_schema);
 			for (String sql : schema.split(";")) {
@@ -235,6 +228,14 @@ final class DBHelper {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+			if (oldVersion < 6)
+				sqLiteDatabase.execSQL("ALTER TABLE TestResults ADD COLUMN AdditionalPoints INTEGER;");
+		}
+		
+		@Override
+		public void onConfigure(SQLiteDatabase db) {
+			if (ENABLE_FOREIGN_KEYS)
+				db.execSQL("PRAGMA foreign_keys = ON;");
 		}
 	}
 }

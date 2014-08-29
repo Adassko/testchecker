@@ -168,20 +168,13 @@ public final class CaptureActivity extends Activity implements
 
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 		
-		Intent intent = getIntent();
-		int testId = intent.getIntExtra(SCAN_TEST_ID, -1);
-		int variant = intent.getIntExtra(SCAN_TEST_VARIANT, -1);
-		
 		((TextView)findViewById(R.id.status_view))
 		.setText(R.string.scan_test_barcode);
 		
 		progressBar = (ProgressBar)findViewById(R.id.progressBar);
 		progressBar.setVisibility(View.GONE);
 		progressBar.getProgressDrawable().setColorFilter(Color.GREEN, Mode.MULTIPLY);
-		
-		if (testId >= 0 && variant >= 1)
-			chooseTest(testId, variant);
-				
+
 		currentTestSheet = null;
 	}
 	
@@ -276,6 +269,13 @@ public final class CaptureActivity extends Activity implements
 		decodeFormats.add(BarcodeFormat.TEST);
 		decodeFormats.add(BarcodeFormat.CODE_128);
 		characterSet = null;
+		
+		Intent intent = getIntent();
+		int testId = intent.getIntExtra(SCAN_TEST_ID, -1);
+		int variant = intent.getIntExtra(SCAN_TEST_VARIANT, -1);
+		
+		if (testId >= 0 && variant >= 1)
+			chooseTest(testId, variant);
 	}
 
 	@Override
@@ -390,7 +390,10 @@ public final class CaptureActivity extends Activity implements
 			
 			break;
 		case R.id.menu_complete:
+			TestSheet testSheet = getCurrentTestSheet();
 			AnswerSheet answerSheet = viewfinderView.getAnswerSheet();
+			
+			if (testSheet == null || answerSheet == null) return true;				
 			
 			TestResult testResult = TestEvaluator.getTestResults(getCurrentTestSheet(), answerSheet);
 			testResult = dataManager.saveTestResult(testResult);

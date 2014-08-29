@@ -12,13 +12,14 @@ import android.widget.NumberPicker.Formatter;
 
 public class DialogHelper {
 
-	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput, String value) {
+	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput, String value, int inputType) {
 		final EditText input;
 		final OnAcceptListener acceptListener = accept;
 		AlertDialog.Builder builder = new AlertDialog.Builder(context)
 			.setTitle(titleResId).setMessage(messageResId);
 		if (withTextInput) {
 			input = new EditText(context);
+			input.setInputType(inputType);
 			if (value != null)
 				input.setText(value);
 			builder.setView(input);
@@ -35,10 +36,14 @@ public class DialogHelper {
 		}).setNegativeButton(R.string.button_cancel, null).show();
 	}
 	
+	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput, String value) {
+		 showDialog(context, titleResId, messageResId, accept, withTextInput, value, 0);
+	}
+	
 	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput) {
 		 showDialog(context, titleResId, messageResId, accept, withTextInput, null);
 	}
-	
+
 	public static void showNumberChooser(Context context, int messageResId, OnAcceptListener accept, int value, int min, int max) {
 		final NumberPicker input;
 		final OnAcceptListener acceptListener = accept;

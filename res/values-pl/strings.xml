@@ -17,6 +17,14 @@
 
 -->
 <resources>
+    <string name="msg_student_already_exists">Uczeń o tym identyfikatorze już istnieje</string>
+    <string name="button_students">Uczniowie</string>
+   	<string name="msg_cannot_save_student">Nie można zapisać ucznia</string>
+    <string name="remove_testresult">Usuń rezultat testu</string>
+    <string name="msg_remove_test_result">Czy jesteś pewien że chcesz usunąć ten wynik testu?</string>
+	<string name="msg_test_result_removed">Wynik testu usunięty</string>
+	<string name="msg_cannot_remove_test_result">Nie można usunąć wyniku testu z nieznanej przyczyny</string>
+    <string name="testresults_remove">Usuń wynik testu</string>
     <string name="action_confirm">Zatwierdź</string>
     <string name="msg_test_removed">Test został usunięty</string>
     <string name="msg_cannot_remove_test">Nie można usunąć testu z nieznanej przyczyny</string>
@@ -29,6 +37,7 @@
     <string name="scan_test_barcode">Umieść kod paskowy testu pod czytnikiem lub kliknij \"Wybierz test\"</string>
     <string name="no_test_selected">Nie wybrano testu</string>
     <string name="test_identifier">test %1$s wariant %2$d</string>
+    <string name="msg_new_student_id">Podaj ID nowego studenta</string>
     <string name="student_id">ID studenta</string>
     <string name="msg_edit_not_safe">Edycja może spowodować unieważnienie wszystkich wcześniej wydrukowanych testów. Chcesz kontynuować?</string>
     <string name="msg_new_test">Nowy test</string>
@@ -53,6 +62,8 @@
     <string name="app_name">Testy</string>
     <string name="app_picker_name">Aplikacje</string>
     <string name="bookmark_picker_name">Zakładki</string>
+    <string name="button_create_test">Testy</string>
+    <string name="button_view_results">Zapisane wyniki</string>
     <string name="button_add_calendar">Dodaj do kalendarza</string>
     <string name="button_add_contact">Dodaj kontakt</string>
     <string name="button_book_search">Szukaj książek</string>
@@ -193,6 +204,13 @@
     <string name="questions_count">Liczba pytań na teście</string>
     <string name="variants">Liczba wariantów</string>
     <string name="id_length">Długość ID ucznia</string>
+    <string name="title_activity_test_results_list">Wyniki testów</string>
     <string name="additional_points">Punkty dodatkowe</string>
-
-    <string name="grade">Ocena</string></resources>
+    <string name="grade">Ocena</string>
+    <string name="button_new_student">Nowy uczeń</string>
+    <string name="hint_fullname">Imię Nazwisko</string>
+    <string name="hint_phone">Numer telefonu</string>
+    <string name="hint_email">Adres E-mail</string>
+    <string name="title_activity_students_list">Lista uczniów</string>
+    <string name="title_activity_student_edit">Edycja ucznia</string>
+</resources>

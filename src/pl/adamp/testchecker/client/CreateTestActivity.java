@@ -549,6 +549,12 @@ public class CreateTestActivity extends Activity {
 				}, 1, 1, 40);
 				return true;
 			}
+			if (id == R.id.button_results) {
+				Intent intent = new Intent(getActivity(), TestResultsListActivity.class);
+				intent.putExtra(TestResultsListActivity.TEST_RESULT_TEST_ID, test.getId());
+				startActivity(intent);
+				return true;
+			}
 			return super.onOptionsItemSelected(item);
 		}
 		

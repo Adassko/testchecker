@@ -21,6 +21,7 @@ public class TestResult implements Serializable {
 	private Date date;
 	private int testId;
 	private int variant;
+	private String testName;
 	
 	public TestResult() {
 		this(-1);
@@ -46,6 +47,14 @@ public class TestResult implements Serializable {
 	
 	public int getTestId() {
 		return this.testId;
+	}
+	
+	public void setTestName(String testName) {
+		this.testName = testName;
+	}
+	
+	public String getTestName() {
+		return this.testName;
 	}
 	
 	public int getVariant() {

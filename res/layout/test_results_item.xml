@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/list_selector">
+    
+    <TextView
+        android:id="@+id/textView_grade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:textSize="35dp"
+        />
+    
+    <TextView
+        android:id="@+id/testName"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/textView_grade"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        />
+
+    <TextView
+        android:id="@+id/textView_student_id"
+        android:layout_below="@+id/testName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        />
+
+    <TextView
+        android:id="@+id/testResultDate"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/testName"
+        android:layout_below="@+id/textView_student_id"
+        android:paddingLeft="10dp"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+</RelativeLayout>

@@ -1,26 +1,35 @@
 # view res/layout/search_book_contents_list_item.xml #generated:17
 -keep class com.google.zxing.client.android.book.SearchBookContentsListItem { <init>(...); }
 
-# view AndroidManifest.xml #generated:66
+# view AndroidManifest.xml #generated:69
 -keep class pl.adamp.testchecker.client.CaptureActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:112
+# view AndroidManifest.xml #generated:115
 -keep class pl.adamp.testchecker.client.CreateTestActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:91
+# view AndroidManifest.xml #generated:94
 -keep class pl.adamp.testchecker.client.HelpActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:100
+# view AndroidManifest.xml #generated:103
 -keep class pl.adamp.testchecker.client.MainActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:86
+# view AndroidManifest.xml #generated:89
 -keep class pl.adamp.testchecker.client.PreferencesActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:132
+# view AndroidManifest.xml #generated:135
 -keep class pl.adamp.testchecker.client.QuestionEditActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:124
+# view AndroidManifest.xml #generated:165
+-keep class pl.adamp.testchecker.client.StudentEditActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:154
+-keep class pl.adamp.testchecker.client.StudentsListActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:127
 -keep class pl.adamp.testchecker.client.TestResultsActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:143
+-keep class pl.adamp.testchecker.client.TestResultsListActivity { <init>(...); }
 
 # view res/layout/capture.xml #generated:23
 -keep class pl.adamp.testchecker.client.ViewfinderView { <init>(...); }
@@ -30,6 +39,9 @@
 
 # onClick res/layout/activity_main.xml #generated:23
 -keepclassmembers class * { *** createTest(...); }
+
+# onClick res/layout/activity_main.xml #generated:56
+-keepclassmembers class * { *** studentsClick(...); }
 
 # onClick res/layout/activity_main.xml #generated:34
 -keepclassmembers class * { *** viewResults(...); }

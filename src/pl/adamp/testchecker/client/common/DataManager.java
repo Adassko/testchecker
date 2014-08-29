@@ -371,11 +371,54 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 	public TestResult getTestResult(int id) {
 		final TestResult[] result = new TestResult[] { null };
 
-		db.select(new String[] { "Id", "TestId", "StudentId", "Date", "Points", "AdditionalPoints", "CorrectAnswers",
-				"IncorrectAnswers", "Grade", "MaxPoints", "Variant" },
-				"TestResults", // FROM
-				"Id = ?", vals(id), // WHERE
-				null, // ORDER BY,
+		db.select("SELECT tr.Id, tr.TestId, t.Name TestName, tr.StudentId, tr.Date, tr.Points, tr.AdditionalPoints, tr.CorrectAnswers, " +
+				"tr.IncorrectAnswers, tr.Grade, tr.MaxPoints, tr.Variant FROM TestResults tr " +
+				"LEFT JOIN Tests t ON t.Id = tr.TestId " +
+				"WHERE tr.Id = ?", vals(id),
+				new RowReader() {
+					public void readRow(Reader r) {
+						TestResult testResult = new TestResult(r.getInt("Id"));
+						
+						testResult.setTestId(r.getInt("TestId"));
+						testResult.setStudentId(r.getInt("StudentId"));
+						testResult.setDate(new Date(1000L * r.getInt("Date")));
+						testResult.setPoints(r.getInt("Points"));
+						testResult.setAdditionalPoints(r.getInt("AdditionalPoints"));
+						testResult.setCorrect(r.getInt("CorrectAnswers"));
+						testResult.setIncorrect(r.getInt("IncorrectAnswers"));
+						testResult.setGrade(r.getString("Grade"));
+						testResult.setMaxPoints(r.getInt("MaxPoints"));
+						testResult.setVariant(r.getInt("Variant"));
+						testResult.setTestName(r.getString("TestName"));
+						
+						result[0] = testResult;
+					}
+		});
+
+		return result[0];
+	}
+	
+	public List<TestResult> getTestResults(long studentId, int testId) {
+		final List<TestResult> result = new ArrayList<TestResult>();
+		
+		String where = "";
+		String[] whereArgs = null;
+		
+		if (studentId >= 0) {
+			where = "WHERE tr.StudentId = ?";
+			whereArgs = vals(studentId);
+		}
+		if (testId >= 0) {
+			where = "WHERE tr.TestId = ?";
+			whereArgs = vals(testId);
+		}
+		
+		db.select("SELECT tr.Id, tr.TestId, t.Name TestName, tr.StudentId, tr.Date, tr.Points, tr.AdditionalPoints, tr.CorrectAnswers, " +
+				"tr.IncorrectAnswers, tr.Grade, tr.MaxPoints, tr.Variant FROM TestResults tr " +
+				"LEFT JOIN Tests t ON t.Id = tr.TestId " +
+				where +
+				" ORDER BY tr.Date DESC",
+				whereArgs,
 				new RowReader() {
 			public void readRow(Reader r) {
 				TestResult testResult = new TestResult(r.getInt("Id"));
@@ -390,12 +433,13 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 				testResult.setGrade(r.getString("Grade"));
 				testResult.setMaxPoints(r.getInt("MaxPoints"));
 				testResult.setVariant(r.getInt("Variant"));
+				testResult.setTestName(r.getString("TestName"));
 				
-				result[0] = testResult;
+				result.add(testResult);
 			}
 		});
-
-		return result[0];
+		
+		return result;
 	}
 	
 	/**
@@ -429,6 +473,14 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Usuwa wynik testu
+	 * @return True jeœli usuwanie siê powiod³o
+	 */
+	public boolean deleteTestResult(TestResult testResult) {
+		return db.delete("TestResults", "Id = ?", vals(testResult.getId())) == 1;
 	}
 	
 	/**
@@ -585,11 +637,82 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		return db.delete("TestQuestions", "TestId = ? AND QuestionId = ?", vals(test.getId(), question.getId())) == 1;
 	}
 	
+	/**
+	 * Pobiera ucznia z bazy danych
+	 * @param studentId Identyfikator ucznia
+	 */
 	public Student getStudent(long studentId) {
-		if (studentId == 107926) {
-			return new Student("Adam P³onka");
+		final Student[] result = new Student[] { null };
+		
+		db.select(
+				new String[] { "Id", "Name", "Telephone", "Description", "Email" }, // columns
+				"Students", // FROM
+				"Id = ?", vals(studentId), // WHERE
+				null, // ORDER BY
+				new RowReader() {
+					public void readRow(Reader r) {
+						Student x = new Student(r.getInt("Id"), r.getString("Name"));
+						x.setPhone(r.getString("Telephone"));
+						x.setDescription(r.getString("Description"));
+						x.setEmail(r.getString("Email"));
+						result[0] = x;
+					}
+				}
+		);
+		
+		return result[0];
+	}
+	
+	/**
+	 * Zapisuje ucznia w bazie danych. W odró¿nieniu od innych funkcji,
+	 * nale¿y podaæ od razu identyfikator pod którym student zostanie zapisany.
+	 * @param student Instancja ucznia do zapisania
+	 * @return Niezmieniona instancja wejœciowa, lub NULL w przypadku b³êdu
+	 */
+	public Student saveStudent(Student student) {
+		if (student.getId() < 0) return null;
+		
+		ContentValues values = new ContentValues();
+		values.put("Name", student.getFullName());
+		values.put("Telephone", student.getPhone());
+		values.put("Description", student.getDescription());
+		values.put("Email", student.getEmail());
+		
+		int affectedRows = db.update("Students", values, "Id = ?", vals(student.getId()));
+			
+		if (affectedRows == 1)
+			return student;
+
+		values.put("Id", student.getId());
+		long id = db.insert("Students", values);
+
+		if (id >= 0) {
+			return student;
 		}
+		
 		return null;
+	}
+	
+	public List<Student> getStudents() {
+		final List<Student> result = new ArrayList<Student>();
+		
+		db.select(
+				new String[] { "Id", "Name", "Telephone", "Description", "Email" }, // columns
+				"Students", // FROM
+				null, null, // WHERE
+				"Id", // ORDER BY
+				new RowReader() {
+					public void readRow(Reader r) {
+						Student x = new Student(r.getInt("Id"), r.getString("Name"));
+						x.setPhone(r.getString("Telephone"));
+						x.setDescription(r.getString("Description"));
+						x.setEmail(r.getString("Email"));
+						result.add(x);
+					}
+				}
+		);
+		
+		return result;
 	}
 	
 	/**

@@ -54,13 +54,24 @@
             android:text="@string/button_scan" />
 
         <Button
-            android:id="@+id/button_settings"
+            android:id="@+id/button_students"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/button_view_results"
+            android:onClick="studentsClick"
+            android:text="@string/button_students" />
+        
+        <Button
+            android:id="@+id/button_settings"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/button_students"
             android:text="@string/button_settings" />
 
     </RelativeLayout>

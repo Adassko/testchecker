@@ -71,6 +71,8 @@ CREATE TABLE TestResults (
     
     FOREIGN KEY (TestId) REFERENCES Tests(Id) ON UPDATE CASCADE ON DELETE SET NULL
 );
+CREATE INDEX id_testresults_studentid ON TestResults (StudentId ASC);
+CREATE INDEX id_testresults_testid ON TestResults (TestId ASC);
 
 CREATE TABLE TestQuestionAnswers (
     TestResultId INTEGER,

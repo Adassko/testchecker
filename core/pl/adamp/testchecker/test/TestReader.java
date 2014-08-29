@@ -53,19 +53,6 @@ public class TestReader implements Reader {
 	private static final int MAX_AVG_VARIANCE = 42;
 	private final String TAG = TestReader.class.getName();
 	
-	/*static final int[][] LOWER_PATTERNS = {
-		{1, 1, 2, 1, 2}, // 0
-	    {1, 2, 2, 1, 2},
-	    //{1, 2, 2, 2, 2},
-	    {1, 2, 2, 2, 1},
-	    {1, 2, 1, 1, 3},
-	    {1, 2, 1, 2, 3}, // 5
-	    {1, 1, 2, 2, 1},
-	    {1, 2, 2, 1, 1},
-	    {1, 1, 1, 3, 2}, 
-	    {1, 3, 1, 1, 2},
-	};*/
-	
 	static final int[][] CODE_PATTERNS = {
 	      {1, 2, 1, 2, 2, 2, 2}, // 0
 	      {1, 2, 2, 2, 1, 2, 2},
@@ -135,15 +122,13 @@ public class TestReader implements Reader {
 	
 	public static int[] getLowerCodePattern(int code) {
 		return CODE_PATTERNS[code % MAX_TEST_ROWS];
-//		return LOWER_PATTERNS[code % LOWER_PATTERNS.length];
 	}
 	
 	public static final int MAX_TEST_ROWS = CODE_PATTERNS.length;
 	
-	private static final int CONFIDENCE_THRESHOLD = 8;
+	private static final int CONFIDENCE_THRESHOLD = 3;
 
 	private HashMap<QuestionAnswers, Integer> possibleResults;
-	//private QuestionAnswers[] acceptedResults;
 	
 	private ResultPointCallback resultPointCallback = null;
 	private TestResultCallback testResultCallback = null;
@@ -153,7 +138,6 @@ public class TestReader implements Reader {
 	
 	public TestReader() {
 		possibleResults = new HashMap<QuestionAnswers, Integer>(200);
-		//acceptedResults = new QuestionAnswers[MAX_TEST_ROWS];
 	}
 	
 	@Override
@@ -389,10 +373,11 @@ public class TestReader implements Reader {
 		}*/
 		
 		// TODO: zaimplementowaæ algorytm Bresenhama
+		int threshold = Math.max(3, Math.round((plusR - minusR - 1) * 0.2f));
 		for (int y = minusR; y < plusR; y ++) {
 			if (y != cY && matrix.get(cX, y)) {
 				checked ++;
-				if (checked > 3) return true;
+				if (checked > threshold) return true;
 			}
 		}
 		return false;

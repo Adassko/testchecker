@@ -154,7 +154,7 @@ public class TestResultsActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
-		if (id == R.id.action_confirm) {
+		if (id == R.id.action_accept) {
 			dataManager.saveTestResult(result);
 			for (QuestionAnswers answers : questionAnswers) {
 				dataManager.saveQuestionAnswers(result, answers);

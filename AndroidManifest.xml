@@ -12,7 +12,7 @@
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License.
+ limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="pl.adamp.testchecker.client"
@@ -107,31 +107,64 @@
         </activity>
         <activity
             android:name="pl.adamp.testchecker.client.CreateTestActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_create_test"
             android:parentActivityName="pl.adamp.testchecker.client.MainActivity"
-            android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:theme="@style/FullScreen" >
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="pl.adamp.testchecker.client.MainActivity" />
         </activity>
         <activity
             android:name="pl.adamp.testchecker.client.TestResultsActivity"
-            android:label="@string/title_activity_test_results"
             android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_test_results"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:theme="@style/FullScreen" >
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" >
         </activity>
         <activity
             android:name="pl.adamp.testchecker.client.QuestionEditActivity"
-            android:label="@string/title_activity_question_edit"
             android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_question_edit"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:theme="@style/FullScreen" >
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" >
+        </activity>
+        <activity
+            android:name="pl.adamp.testchecker.client.TestResultsListActivity"
+            android:label="@string/title_activity_test_results_list"
+            android:parentActivityName="pl.adamp.testchecker.client.MainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="pl.adamp.testchecker.client.MainActivity" />
+        </activity>
+        <activity
+            android:name="pl.adamp.testchecker.client.StudentsListActivity"
+            android:label="@string/title_activity_students_list"
+            android:screenOrientation="portrait"
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" 
+            android:parentActivityName="pl.adamp.testchecker.client.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="pl.adamp.testchecker.client.MainActivity" />
+        </activity>
+        <activity
+            android:name="pl.adamp.testchecker.client.StudentEditActivity"
+            android:label="@string/title_activity_student_edit"
+            android:screenOrientation="portrait"
+            android:theme="@style/FullScreen"
+            android:windowSoftInputMode="adjustPan" 
+            android:parentActivityName="pl.adamp.testchecker.client.StudentsListActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="pl.adamp.testchecker.client.StudentsListActivity" />
         </activity>
     </application>
 

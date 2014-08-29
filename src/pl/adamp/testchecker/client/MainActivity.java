@@ -28,17 +28,12 @@ public class MainActivity extends Activity {
 	}
 	
 	public void viewResults(View v) {
-		DataManager dm = new DataManager(this);
-		QuestionCategory cat = new QuestionCategory("Kategoria" + (int)(Math.random() * 1000 + 1000));
-		cat = dm.saveQuestionCategory(cat);
-		for (int i = 0; i < 2; i ++) {
-			Question q = new Question("Pytanie " + (int)(Math.random() * 1000));
-			dm.saveQuestion(q, cat);
-		}
-		Question q = new Question("Pytanie " + (int)(Math.random() * 1000));
-		dm.saveQuestion(q, QuestionCategory.DefaultCategory);
-		Toast.makeText(this, "Stworzono pare pytan", Toast.LENGTH_SHORT).show();
-		//Intent intent = new Intent(this, TestResultsActivity.class);
-		//startActivity(intent);
+		Intent intent = new Intent(this, TestResultsListActivity.class);
+		startActivity(intent);
+	}
+	
+	public void studentsClick(View v) {
+		Intent intent = new Intent(this, StudentsListActivity.class);
+		startActivity(intent);
 	}
 }

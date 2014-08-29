@@ -207,7 +207,7 @@ final class DBHelper {
 	}
 	
 	public class OpenHelper extends SQLiteOpenHelper {
-		private static final int DB_VERSION = 6;
+		private static final int DB_VERSION = 7;
 		private static final String DB_NAME = "testchecker.db";
 		private static final boolean ENABLE_FOREIGN_KEYS = true;
 		
@@ -228,8 +228,11 @@ final class DBHelper {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-			if (oldVersion < 6)
-				sqLiteDatabase.execSQL("ALTER TABLE TestResults ADD COLUMN AdditionalPoints INTEGER;");
+			if (oldVersion < 7) {
+				sqLiteDatabase.execSQL("DROP TABLE Students;");
+				sqLiteDatabase.execSQL("	CREATE TABLE Students (    Id INTEGER PRIMARY KEY, Name TEXT, Description TEXT, "+
+					    "Email TEXT,	    Telephone TEXT);");
+			}
 		}
 		
 		@Override

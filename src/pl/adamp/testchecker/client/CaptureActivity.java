@@ -41,6 +41,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -62,10 +63,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -77,9 +76,6 @@ import pl.adamp.testchecker.client.common.DataManager;
 import pl.adamp.testchecker.client.common.DialogHelper;
 import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
 import pl.adamp.testchecker.client.common.TestsListAdapter;
-import pl.adamp.testchecker.client.result.ResultButtonListener;
-import pl.adamp.testchecker.client.result.ResultHandler;
-import pl.adamp.testchecker.client.result.ResultHandlerFactory;
 import pl.adamp.testchecker.client.test.TestDefinition;
 import pl.adamp.testchecker.client.test.TestEvaluator;
 import pl.adamp.testchecker.client.test.TestResult;
@@ -132,6 +128,7 @@ public final class CaptureActivity extends Activity implements
 	private TestDefinition currentTestDefinition;
 	private DataManager dataManager;
 	private ProgressBar progressBar;
+	private SparseArray<String> gradingTable;
 
 	TestSheet getCurrentTestSheet() {
 		return currentTestSheet;
@@ -176,6 +173,8 @@ public final class CaptureActivity extends Activity implements
 		progressBar.getProgressDrawable().setColorFilter(Color.GREEN, Mode.MULTIPLY);
 
 		currentTestSheet = null;
+		
+		gradingTable = dataManager.getGradingTable();
 	}
 	
 
@@ -395,7 +394,8 @@ public final class CaptureActivity extends Activity implements
 			
 			if (testSheet == null || answerSheet == null) return true;				
 			
-			TestResult testResult = TestEvaluator.getTestResults(getCurrentTestSheet(), answerSheet);
+			TestResult testResult = TestEvaluator.getTestResults(getCurrentTestSheet(), answerSheet, gradingTable);
+
 			testResult = dataManager.saveTestResult(testResult);
 			if (testResult != null) {
 				for (QuestionAnswers answer : answerSheet.getAcceptedAnswers()) {

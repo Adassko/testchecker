@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +34,7 @@ public class TestResultsActivity extends Activity {
 	private List<QuestionAnswers> questionAnswers;
 	private DataManager dataManager;
 	private final Activity that = this;
+	private SparseArray<String> gradingTable;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +45,7 @@ public class TestResultsActivity extends Activity {
 		dataManager = new DataManager(this);
 
 		result = dataManager.getTestResult(testResultId);
+		gradingTable = dataManager.getGradingTable();
 		TestDefinition testDefinition = dataManager.getTest(result.getTestId());
 
 		// lista pytañ
@@ -118,21 +121,29 @@ public class TestResultsActivity extends Activity {
 	
 	private void recalculatePoints(boolean recalculateQuestions) {
 		int points = result.getPoints();
-		
 		if (recalculateQuestions) {
+			int correct = 0;
+			int incorrect = 0;
 			points = 0;
 			for (QuestionAnswers answers : questionAnswers) {
-				points += answers.getPoints();
+				int currentPoints = answers.getPoints();
+				points += currentPoints;
+				if (currentPoints > 0)
+					correct++;
+				else incorrect++;
 			}
 			result.setPoints(points);
+			result.setCorrect(correct);
+			result.setIncorrect(incorrect);
 		}
 		TextView points_summary = (TextView) findViewById(R.id.textView_points_summary);
 		int percent = result.getTotalPoints() * 100 / result.getMaxPoints();
 		points_summary.setText(result.getTotalPoints() + "/" + result.getMaxPoints() + " (" + percent + "%)");
-		String grade = TestEvaluator.gradeForPercent(percent, dataManager.getGradingTable());
+		String grade = TestEvaluator.gradeForPercent(percent, gradingTable);
 		
 		TextView textView_grade = (TextView) findViewById(R.id.textView_grade);
 		textView_grade.setText(grade);
+		result.setGrade(grade);
 	}
 	
 	/**

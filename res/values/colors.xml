@@ -37,5 +37,6 @@
     <color name="answersheet_incorrect">#70f00000</color>
     <color name="black_overlay">#66000000</color>
     <color name="layout_blocker">#70000000</color>
+    <color name="grade_color">#ff29A9FF</color>
 
 </resources>

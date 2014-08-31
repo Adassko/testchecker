@@ -24,4 +24,6 @@
   <item type="id" name="return_scan_result"/>
   <item type="id" name="item"/>
   <item type="id" name="parent"/>
+  <item type="id" name="viewholder"/>
+  <item type="id" name="id"/>
 </resources>

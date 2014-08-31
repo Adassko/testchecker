@@ -17,6 +17,12 @@
 
 -->
 <resources>
+    <string name="export_succeed">Backup bazy danych zapisano do %s</string>
+    <string name="export_failed">Błąd przy tworzeniu backupu</string>
+    <string name="import_succeed">Przywracanie bazy zakończone sukcesem</string>
+    <string name="import_failed">Błąd przy przywracaniu bazy danych!</string>
+    <string name="grade_min_percent">Procent</string>
+    <string name="menu_remove">Usuń</string>
     <string name="msg_student_already_exists">Uczeń o tym identyfikatorze już istnieje</string>
     <string name="button_students">Uczniowie</string>
    	<string name="msg_cannot_save_student">Nie można zapisać ucznia</string>
@@ -41,6 +47,7 @@
     <string name="student_id">ID studenta</string>
     <string name="msg_edit_not_safe">Edycja może spowodować unieważnienie wszystkich wcześniej wydrukowanych testów. Chcesz kontynuować?</string>
     <string name="msg_new_test">Nowy test</string>
+    <string name="button_settings">Ustawienia</string>
     <string name="msg_new_test_name">Nazwa testu</string>
     <string name="msg_cannot_create_test">Wystąpił błąd przy tworzeniu testu</string>
     <string name="msg_update_category_name">Zmień nazwę kategorii</string>
@@ -211,6 +218,12 @@
     <string name="hint_fullname">Imię Nazwisko</string>
     <string name="hint_phone">Numer telefonu</string>
     <string name="hint_email">Adres E-mail</string>
+    <string name="hint_student_id">ID ucznia</string>
     <string name="title_activity_students_list">Lista uczniów</string>
     <string name="title_activity_student_edit">Edycja ucznia</string>
+    <string name="button_add_grade">Dodaj ocenę</string>
+    <string name="grading">Oceny</string>
+    <string name="button_export_database">Backup bazy danych</string>    <string name="title_activity_settings">Ustawienia</string>
+    
+    <string name="button_restore_database">Przywróć bazę</string>
 </resources>

@@ -38,7 +38,7 @@ public class TestResultsListActivity extends Activity {
 		
 		Intent intent = this.getIntent();
 		int test_id = intent.getIntExtra(TEST_RESULT_TEST_ID, -1);
-		long student_id = intent.getIntExtra(TEST_RESULT_STUDENT_ID, -1);
+		long student_id = intent.getLongExtra(TEST_RESULT_STUDENT_ID, -1);
 		
 		dataManager = new DataManager(this);
 		ListView listView = (ListView) findViewById(R.id.listView_testResults);

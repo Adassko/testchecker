@@ -96,7 +96,7 @@ public class TestPrinter {
 		top += barcode.getHeight();
 		tp.setTextSize(from.mm(2));
 		tp.setTextAlign(Align.CENTER);
-		String subtext = String.format(resources.getString(R.string.test_identifier), test.getId(), test.getVariant());
+		String subtext = String.format(Locale.US, resources.getString(R.string.test_identifier), test.getId(), test.getVariant());
 		new WrappedText(subtext, tp, barcode.getWidth())
 			.drawOn(canvas, left + barcode.getWidth() / 2, top);
 

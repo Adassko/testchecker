@@ -1,5 +1,6 @@
 package pl.adamp.testchecker.client.common;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -95,16 +96,51 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		return result[0];
 	}
 	
+	/**
+	 * @return Tabela ocen
+	 */
 	public SparseArray<String> getGradingTable() {
-		SparseArray<String> result = new SparseArray<String>();
+		final SparseArray<String> result = new SparseArray<String>();
 		
-		result.put(0, "1");
-		result.put(30, "2");
-		result.put(50, "3");
-		result.put(70, "4");
-		result.put(90, "5");
+		db.select(new String[] { "MinScore", "Grade" },
+				"Grading", // FROM
+				null, null, // WHERE
+				"MinScore", // ORDER BY
+				new RowReader() {
+					@Override
+					public void readRow(Reader r) {
+						result.append(r.getInt("MinScore"), r.getString("Grade"));
+					}
+		});
 		
 		return result;
+	}
+	
+	/**
+	 * Zapisuje tabelê ocen
+	 * @param gradingTable
+	 * @return True je¿eli uda³o siê zapisaæ wszystkie wiersze
+	 */
+	public boolean saveGradingTable(SparseArray<String> gradingTable) {
+		db.delete("Grading", null, null); // wyczyszczenie tabeli
+		
+		ContentValues values = new ContentValues();
+		
+		int size = gradingTable.size();
+		boolean success = true;
+		for (int i = 0; i < size; i ++) {
+			int percent = gradingTable.keyAt(i);
+			String grade = gradingTable.valueAt(i); 
+			if (percent < 0 || percent > 100 ||
+				grade == null || grade.isEmpty()) continue;  // niew³aœciwy wiersz (np nowy, pusty)
+			
+			values.put("MinScore", percent);
+			values.put("Grade", gradingTable.valueAt(i));
+			long id = db.insert("Grading", values);
+			if (id == -1)
+				success = false;
+		}
+		return success;
 	}
 	
 	/**
@@ -764,5 +800,27 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 			i ++;
 		}
 		return results;
+	}
+	
+	public boolean import_db(String fromFileName) {
+		try {
+			db.importDb(fromFileName);
+			return true;
+		}
+		catch (IOException e) {
+			Log.d(TAG, e.toString());
+			return false;
+		}
+	}
+	
+	public boolean export_db(String toFileName) {
+		try {
+			db.exportDb(toFileName);
+			return true;
+		}
+		catch (IOException e) {
+			Log.d(TAG, e.toString());
+			return false;
+		}
 	}
 }

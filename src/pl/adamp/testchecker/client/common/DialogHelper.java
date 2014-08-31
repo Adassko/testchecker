@@ -6,6 +6,7 @@ import pl.adamp.testchecker.client.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.text.InputType;
 import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.NumberPicker.Formatter;
@@ -37,7 +38,7 @@ public class DialogHelper {
 	}
 	
 	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput, String value) {
-		 showDialog(context, titleResId, messageResId, accept, withTextInput, value, 0);
+		 showDialog(context, titleResId, messageResId, accept, withTextInput, value, InputType.TYPE_CLASS_TEXT);
 	}
 	
 	public static void showDialog(Context context, int titleResId, int messageResId, OnAcceptListener accept, boolean withTextInput) {
@@ -51,25 +52,26 @@ public class DialogHelper {
 			.setMessage(messageResId);
 		input = new NumberPicker(context);
 		input.setOrientation(NumberPicker.HORIZONTAL);
-		final int originalMin = min;
+		final int valueCorrection;
 		if (min < 0) { // numberPicker nie pozwala na wybór ujemnych wartoœci - obejœcie
-			value -= min;
+			valueCorrection = min;
+			value -= valueCorrection;
 			max = max - min;
 			min = 0;
 
 			input.setFormatter(new Formatter() {
 				@Override
 				public String format(int index) {
-					return Integer.toString(index + originalMin);
+					return Integer.toString(index + valueCorrection);
 				}
 			});
-		}
+		} else valueCorrection = 0;
 		input.setMinValue(min);
 		input.setMaxValue(max);
 		input.setValue(value);
 		input.setWrapSelectorWheel(false);
 
-		if (originalMin < 0) { // hack na bug w androidzie - wartoœci siê nie wyœwietlaj¹ poprawnie do pierwszego dotkniêcia
+		if (valueCorrection < 0) { // hack na bug w androidzie - wartoœci siê nie wyœwietlaj¹ poprawnie do pierwszego dotkniêcia
 			try {
 				Method method = input.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
 				method.setAccessible(true);
@@ -80,7 +82,7 @@ public class DialogHelper {
 		
 		builder.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				acceptListener.onAccept(Integer.toString(input.getValue() + originalMin));
+				acceptListener.onAccept(Integer.toString(input.getValue() + valueCorrection));
 			}
 		}).setNegativeButton(R.string.button_cancel, null).show();
 	}

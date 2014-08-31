@@ -1,13 +1,9 @@
 package pl.adamp.testchecker.client;
 
-import pl.adamp.testchecker.client.common.DataManager;
-import pl.adamp.testchecker.test.entities.Question;
-import pl.adamp.testchecker.test.entities.QuestionCategory;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	@Override
@@ -18,22 +14,27 @@ public class MainActivity extends Activity {
 	}
 
 	public void captureClick(View v) {
-		Intent intent = new Intent(this, CaptureActivity.class);
-		startActivity(intent);
+		start(CaptureActivity.class);
 	}
 	
 	public void createTest(View v) {
-		Intent intent = new Intent(this, CreateTestActivity.class);
-		startActivity(intent);
+		start(CreateTestActivity.class);
 	}
 	
 	public void viewResults(View v) {
-		Intent intent = new Intent(this, TestResultsListActivity.class);
-		startActivity(intent);
+		start(TestResultsListActivity.class);
 	}
 	
 	public void studentsClick(View v) {
-		Intent intent = new Intent(this, StudentsListActivity.class);
+		start(StudentsListActivity.class);
+	}
+	
+	public void settingsClick(View v) {
+		start(SettingsActivity.class);
+	}
+	
+	private void start(Class<?> cls) {
+		Intent intent = new Intent(this, cls);
 		startActivity(intent);
 	}
 }

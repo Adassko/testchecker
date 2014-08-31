@@ -1,5 +1,11 @@
 package pl.adamp.testchecker.client.common;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
 
 import pl.adamp.testchecker.client.R;
@@ -77,7 +83,8 @@ final class DBHelper {
 	}
 	
 	/**
-	 * @return Liczba usuniêtych wierszy
+	 * Usuwa wiersze z tabeli
+	 * @return Liczba usuniêtych wierszy. Liczba wierszy nie jest zwrócona je¿eli nie podano warunku
 	 */
 	public int delete(String table, String where, String[] whereArgs) {
 		SQLiteOpenHelper helper = new OpenHelper(context);
@@ -149,6 +156,40 @@ final class DBHelper {
 			}
 		}
 	}
+	
+	public void exportDb(String fileName) throws IOException {
+		final String inFileName = context.getDatabasePath(OpenHelper.DB_NAME).getPath();
+	    File dbFile = new File(inFileName);
+	    FileInputStream fis = new FileInputStream(dbFile);
+	    OutputStream output = new FileOutputStream(fileName);
+
+	    byte[] buffer = new byte[1024];
+	    int length;
+	    while ((length = fis.read(buffer))>0){
+	        output.write(buffer, 0, length);
+	    }
+
+	    output.flush();
+	    output.close();
+	    fis.close();
+	}
+	
+	public void importDb(String fileName) throws IOException {
+		final String outFileName = context.getDatabasePath(OpenHelper.DB_NAME).getPath();
+	    File dbFile = new File(outFileName);
+	    FileInputStream fis = new FileInputStream(fileName);
+	    OutputStream output = new FileOutputStream(dbFile);
+
+	    byte[] buffer = new byte[1024];
+	    int length;
+	    while ((length = fis.read(buffer))>0){
+	        output.write(buffer, 0, length);
+	    }
+
+	    output.flush();
+	    output.close();
+	    fis.close();
+	}
 
 	public interface RowReader {
 		void readRow(Reader r);
@@ -208,7 +249,7 @@ final class DBHelper {
 	
 	public class OpenHelper extends SQLiteOpenHelper {
 		private static final int DB_VERSION = 7;
-		private static final String DB_NAME = "testchecker.db";
+		public static final String DB_NAME = "testchecker.db";
 		private static final boolean ENABLE_FOREIGN_KEYS = true;
 		
 		private final Context context;

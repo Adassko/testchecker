@@ -72,6 +72,7 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/button_students"
+            android:onClick="settingsClick"
             android:text="@string/button_settings" />
 
     </RelativeLayout>

@@ -1,34 +1,37 @@
 # view res/layout/search_book_contents_list_item.xml #generated:17
 -keep class com.google.zxing.client.android.book.SearchBookContentsListItem { <init>(...); }
 
-# view AndroidManifest.xml #generated:69
+# view AndroidManifest.xml #generated:70
 -keep class pl.adamp.testchecker.client.CaptureActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:115
+# view AndroidManifest.xml #generated:116
 -keep class pl.adamp.testchecker.client.CreateTestActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:94
+# view AndroidManifest.xml #generated:95
 -keep class pl.adamp.testchecker.client.HelpActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:103
+# view AndroidManifest.xml #generated:104
 -keep class pl.adamp.testchecker.client.MainActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:89
+# view AndroidManifest.xml #generated:90
 -keep class pl.adamp.testchecker.client.PreferencesActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:135
+# view AndroidManifest.xml #generated:136
 -keep class pl.adamp.testchecker.client.QuestionEditActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:165
+# view AndroidManifest.xml #generated:177
+-keep class pl.adamp.testchecker.client.SettingsActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:166
 -keep class pl.adamp.testchecker.client.StudentEditActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:154
+# view AndroidManifest.xml #generated:155
 -keep class pl.adamp.testchecker.client.StudentsListActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:127
+# view AndroidManifest.xml #generated:128
 -keep class pl.adamp.testchecker.client.TestResultsActivity { <init>(...); }
 
-# view AndroidManifest.xml #generated:143
+# view AndroidManifest.xml #generated:144
 -keep class pl.adamp.testchecker.client.TestResultsListActivity { <init>(...); }
 
 # view res/layout/capture.xml #generated:23
@@ -39,6 +42,9 @@
 
 # onClick res/layout/activity_main.xml #generated:23
 -keepclassmembers class * { *** createTest(...); }
+
+# onClick res/layout/activity_main.xml #generated:67
+-keepclassmembers class * { *** settingsClick(...); }
 
 # onClick res/layout/activity_main.xml #generated:56
 -keepclassmembers class * { *** studentsClick(...); }

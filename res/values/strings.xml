@@ -12,12 +12,18 @@
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License.
+ limitations under the License.
 -->
 <resources>
+    <string name="export_succeed">Database backup successfully saved to %s</string>
+    <string name="export_failed">Database backup failed!</string>
+    <string name="import_succeed">Database restore completed successfully</string>
+    <string name="import_failed">Database restore failed!</string>
+    <string name="grade_min_percent">Percent</string>
+	<string name="menu_remove">Remove</string>
     <string name="msg_student_already_exists">Student with this ID already exists</string>
     <string name="button_students">Students</string>
-	<string name="msg_cannot_save_student">Cannot save student</string>
+    <string name="msg_cannot_save_student">Cannot save student</string>
     <string name="remove_testresult">Remove test result</string>
     <string name="msg_remove_test_result">Are you sure you want to remove this test result?</string>
     <string name="msg_test_result_removed">Test result has been removed</string>
@@ -217,5 +223,11 @@
     <string name="hint_phone">Phone number</string>
     <string name="hint_email">e-mail@address</string>
     <string name="hint_student_id">Student\'s ID</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="button_add_grade">Add grade</string>
+    <string name="grading">Grading</string>
+    <string name="button_export_database">Backup database</string>
+    <string name="button_restore_database">Restore database</string>
 
 </resources>

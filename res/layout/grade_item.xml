@@ -1,0 +1,30 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/list_selector">
+    
+    <EditText
+        android:id="@+id/grade_limit"
+        android:inputType="number"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/grade_min_percent"
+        android:layout_alignParentLeft="true" />
+    
+    <EditText
+        android:id="@+id/grade"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/grade"
+        android:layout_alignParentRight="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/grade_limit"
+        android:layout_alignBottom="@+id/grade_limit"
+        android:layout_toRightOf="@+id/grade_limit"
+        android:text="%" />
+    
+</RelativeLayout>

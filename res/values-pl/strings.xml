@@ -17,6 +17,10 @@
 
 -->
 <resources>
+    <string name="msg_generating_test">Generowanie arkusza %1$d z %2$d</string>
+    <string name="msg_student_removed">Uczeń usunięty</string>
+    <string name="msg_cannot_remove_student">Wystąpił błąd przy usuwaniu ucznia</string>
+    <string name="menu_student_remove">Usuń ucznia</string>
     <string name="export_succeed">Backup bazy danych zapisano do %s</string>
     <string name="export_failed">Błąd przy tworzeniu backupu</string>
     <string name="import_succeed">Przywracanie bazy zakończone sukcesem</string>
@@ -221,9 +225,13 @@
     <string name="hint_student_id">ID ucznia</string>
     <string name="title_activity_students_list">Lista uczniów</string>
     <string name="title_activity_student_edit">Edycja ucznia</string>
+
     <string name="button_add_grade">Dodaj ocenę</string>
+
     <string name="grading">Oceny</string>
-    <string name="button_export_database">Backup bazy danych</string>    <string name="title_activity_settings">Ustawienia</string>
+
+    <string name="button_export_database">Backup bazy danych</string>
+    <string name="title_activity_settings">Ustawienia</string>
     
     <string name="button_restore_database">Przywróć bazę</string>
 </resources>

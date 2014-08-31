@@ -17,7 +17,9 @@ import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -381,12 +383,14 @@ public class CreateTestActivity extends Activity {
 		private void selectQuestion(Question question, View v, boolean setSelected) {
 			if (setSelected) {
 				if (getDataManager().assignQuestionToTest(question, choosenTest)) {
+					choosenTest.getQuestions().add(question);
 					selectedQuestions.add(question);
 					if (v != null)
 						v.setBackgroundColor(getActivity().getResources().getColor(R.color.question_selected));
 				}
 			} else {
 				if (getDataManager().unassignTestQuestion(question, choosenTest)) {
+					choosenTest.getQuestions().remove(question);
 					selectedQuestions.remove(question);
 					if (v != null)
 						v.setBackgroundColor(Color.TRANSPARENT);
@@ -696,20 +700,47 @@ public class CreateTestActivity extends Activity {
 					}
 					test.printed(true);
 					blockLayout(rootView);
-					getDataManager().saveTest(test);
-					ArrayList<Uri> uris = new ArrayList<Uri>();
-					
-					for (int i = 1; i <= generate_variants; i ++) {
-						TestSheet sheet = test.getTestSheet(i);
-						Bitmap bmp = new TestPrinter(getActivity(), sheet).drawToBitmap(PaperSize.A4, 300);
-						uris.add(saveBitmap(bmp, sheet));
-					}
-					
-					Intent shareIntent = new Intent();
-					shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
-					shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-					shareIntent.setType("image/png");
-					startActivity(Intent.createChooser(shareIntent, "Wyœlij"));
+					final ProgressDialog progress = new ProgressDialog(getActivity());
+					progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+					progress.setIndeterminate(true);
+					progress.setCancelable(false);
+					progress.show();
+					final View v = getView(); 
+					final Thread t = new Thread() {
+						private void setMessage(String message) {
+							final String msg = message;
+							v.post(new Runnable() {
+								public void run() {
+									progress.setMessage(msg);
+								}
+							});
+						}
+						
+						@Override
+						public void run() {
+							getDataManager().saveTest(test);
+							final ArrayList<Uri> uris = new ArrayList<Uri>();
+							
+							for (int i = 1; i <= generate_variants; i ++) {
+								setMessage(String.format(Locale.US, getString(R.string.msg_generating_test), i, generate_variants));
+								TestSheet sheet = test.getTestSheet(i);
+								Bitmap bmp = new TestPrinter(getActivity(), sheet).drawToBitmap(PaperSize.A4, 300);
+								uris.add(saveBitmap(bmp, sheet));
+							}
+							
+							v.post(new Runnable() {
+								public void run() {
+									progress.dismiss();
+									Intent shareIntent = new Intent();
+									shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+									shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+									shareIntent.setType("image/png");
+									startActivity(Intent.createChooser(shareIntent, "Wyœlij"));
+								};
+							});
+						};
+					};
+					t.start();
 				}
 			});
 			

@@ -7,16 +7,22 @@ import pl.adamp.testchecker.client.common.DataManager;
 import pl.adamp.testchecker.client.common.DialogHelper;
 import pl.adamp.testchecker.client.common.StudentsListAdapter;
 import pl.adamp.testchecker.client.common.DialogHelper.OnAcceptListener;
+import pl.adamp.testchecker.client.test.TestResult;
 import pl.adamp.testchecker.test.entities.QuestionCategory;
 import pl.adamp.testchecker.test.entities.Student;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -90,5 +96,47 @@ public class StudentsListActivity extends Activity {
 			}
 			listAdapter.notifyDataSetInvalidated();
 		}
+	}
+	
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		if (v.getId() == R.id.listView_students_list) {
+		    MenuInflater inflater = new MenuInflater(this);
+		    AdapterContextMenuInfo mi = (AdapterContextMenuInfo) menuInfo;
+		    Object o = listAdapter.getItem(mi.position);
+		    if (o instanceof Student) {
+		    	Student student = (Student)o;
+		    	menu.setHeaderTitle(student.getFullName());
+		    	inflater.inflate(R.menu.students_list, menu);
+		    	return;
+		    }
+		}
+		super.onCreateContextMenu(menu, v, menuInfo);
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+	    AdapterContextMenuInfo mi = (AdapterContextMenuInfo) item.getMenuInfo();
+		Object o = listAdapter.getItem(mi.position);
+		
+		switch (item.getItemId()) {
+		case R.id.menu_student_remove:
+			final Student student = (Student)o;
+			DialogHelper.showDialog(this, R.string.msg_sure, R.string.menu_student_remove, new OnAcceptListener() {
+				@Override
+				public void onAccept(String input) {
+					if (dataManager.deleteStudent(student)) {
+						Toast.makeText(StudentsListActivity.this, R.string.msg_student_removed, Toast.LENGTH_SHORT).show();
+					} else {
+						Toast.makeText(StudentsListActivity.this, R.string.msg_cannot_remove_student, Toast.LENGTH_SHORT).show();
+					}
+					listAdapter.remove(student);
+				}
+			}, false);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 }

@@ -12,9 +12,14 @@
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License.
+ limitations under the License.
+
 -->
 <resources>
+    <string name="msg_generating_test">Generating test sheet %1$d of %2$d</string>
+    <string name="msg_student_removed">Student removed</string>
+    <string name="msg_cannot_remove_student">Error occurred while trying to remove student</string>
+    <string name="menu_student_remove">Remove student</string>
     <string name="export_succeed">Database backup successfully saved to %s</string>
     <string name="export_failed">Database backup failed!</string>
     <string name="import_succeed">Database restore completed successfully</string>

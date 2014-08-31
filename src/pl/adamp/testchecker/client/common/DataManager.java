@@ -655,9 +655,9 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		values.put("TestId", test.getId());
 		values.put("QuestionId", question.getId());
 		
-		// kolejnoœæ pytania w danym teœcie, nie musi byæ kolejna
+		// kolejnoœæ pytania w danym teœcie, wystarczy ¿e A>B
 		// dla uproszczenia u¿yto aktualnego czasu dziêki czemu
-		// zawsze póŸniej wybrane pytanie bêdzie mia³o póŸniejsz¹ pozycjê
+		// zawsze póŸniej wybrane pytanie bêdzie mia³o dalsz¹ pozycjê
 		values.put("Ordinal", System.currentTimeMillis());
 		
 		return db.insert("TestQuestions", values) != -1;
@@ -727,6 +727,15 @@ public class DataManager implements QuestionsInflater, AnswersInflater {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Usuwa ucznia z bazy danych
+	 * @param student Uczeñ do usuniêcia
+	 * @return True je¿eli uda³o siê poprawnie usun¹æ ucznia z bazy danych
+	 */
+	public boolean deleteStudent(Student student) {
+		return db.delete("Students", "Id = ?", vals(student.getId())) == 1;
 	}
 	
 	public List<Student> getStudents() {

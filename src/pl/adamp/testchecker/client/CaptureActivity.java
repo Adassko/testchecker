@@ -513,17 +513,8 @@ public final class CaptureActivity extends Activity implements
 					Log.d(TAG, e.toString());
 				}
 			}
-			restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
+			restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS, false);
 			return;
-		}
-	}
-
-
-	private static void drawLine(Canvas canvas, Paint paint, ResultPoint a,
-			ResultPoint b, float scaleFactor) {
-		if (a != null && b != null) {
-			canvas.drawLine(scaleFactor * a.getX(), scaleFactor * a.getY(),
-					scaleFactor * b.getX(), scaleFactor * b.getY(), paint);
 		}
 	}
 
@@ -575,11 +566,16 @@ public final class CaptureActivity extends Activity implements
 		builder.show();
 	}
 
-	public void restartPreviewAfterDelay(long delayMS) {
+	public void restartPreviewAfterDelay(long delayMS, boolean resetView) {
 		if (handler != null) {
 			handler.sendEmptyMessageDelayed(R.id.restart_preview, delayMS);
 		}
-		resetStatusView();
+		if (resetView)
+			resetStatusView();
+	}
+
+	public void restartPreviewAfterDelay(long delayMS) {
+		restartPreviewAfterDelay(delayMS, true);
 	}
 
 	private void resetStatusView() {

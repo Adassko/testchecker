@@ -89,5 +89,13 @@ CREATE TABLE Grading (
     MinScore INTEGER PRIMARY KEY,
     Grade TEXT
 );
-    </string>    
+
+INSERT INTO Grading (MinScore, Grade) VALUES (0, \'2\');
+INSERT INTO Grading (MinScore, Grade) VALUES (50, \'3\');
+INSERT INTO Grading (MinScore, Grade) VALUES (60, \'3,5\');
+INSERT INTO Grading (MinScore, Grade) VALUES (70, \'4\');
+INSERT INTO Grading (MinScore, Grade) VALUES (80, \'4,5\');
+INSERT INTO Grading (MinScore, Grade) VALUES (90, \'5\');
+
+    </string>
 </resources>
